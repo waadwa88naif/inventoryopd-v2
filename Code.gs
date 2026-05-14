@@ -11,7 +11,11 @@ var SHEETS = {
 var STATUS_AVAILABLE = 'متوفر';
 var STATUS_LIMITED = 'كمية محدودة';
 var STATUS_UNAVAILABLE = 'غير متوفر';
+var STATUS_UNKNOWN = 'غير محدد';
 var UPDATE_TYPE_AVAILABILITY = 'Availability Update';
+var UPDATE_FIELD_AVAILABILITY = 'حالة التوفر';
+var UPDATE_SOURCE_SUPPLY = 'Supply Mobile Panel';
+var EXPIRY_ACTIVE = 'نشط';
 var EXPIRY_DELETED = 'محذوف';
 
 var MASTER = {
@@ -23,8 +27,8 @@ var MASTER = {
   FORM_AR: 'الشكل الدوائي',
   STATUS: 'حالة التوفر',
   LIMITED_LOCATION: 'مكان توفر الكمية المحدودة',
-  EQUIVALENT: 'هل للصنف بديل مكافئ؟',
-  SUPPLY_NOTE: 'ملاحظة التموين',
+  HAS_ALTERNATIVE: 'هل للصنف بديل مكافئ؟',
+  NOTE: 'ملاحظة التموين',
   UPDATED_AT: 'آخر تحديث',
   UPDATED_BY: 'تم التحديث بواسطة',
   EXPIRY_DATES: 'تواريخ الانتهاء الحالية',
@@ -46,11 +50,12 @@ var UPDATE_LOG = {
   NEW_STATUS: 'الحالة الجديدة',
   OLD_LOCATION: 'مكان التوفر السابق',
   NEW_LOCATION: 'مكان التوفر الجديد',
-  OLD_EQUIVALENT: 'البديل السابق',
-  NEW_EQUIVALENT: 'البديل الجديد',
+  OLD_ALTERNATIVE: 'البديل السابق',
+  NEW_ALTERNATIVE: 'البديل الجديد',
   NOTE: 'ملاحظة',
   USER: 'تم التحديث بواسطة',
-  SOURCE: 'مصدر التحديث'
+  SOURCE: 'مصدر التحديث',
+  FIELD: 'الحقل'
 };
 
 var EXPIRY = {
@@ -73,7 +78,7 @@ var SETTINGS = {
   USERS: 'المستخدمين',
   STATUSES: 'حالات التوفر',
   LIMITED_LOCATIONS: 'مكان توفر الكمية المحدودة',
-  EQUIVALENTS: 'هل للصنف بديل مكافئ؟',
+  ALTERNATIVES: 'هل للصنف بديل مكافئ؟',
   MONTHS: 'الأشهر',
   YEARS: 'السنوات'
 };
@@ -87,8 +92,8 @@ var MASTER_HEADERS = [
   MASTER.FORM_AR,
   MASTER.STATUS,
   MASTER.LIMITED_LOCATION,
-  MASTER.EQUIVALENT,
-  MASTER.SUPPLY_NOTE,
+  MASTER.HAS_ALTERNATIVE,
+  MASTER.NOTE,
   MASTER.UPDATED_AT,
   MASTER.UPDATED_BY,
   MASTER.EXPIRY_DATES,
@@ -110,11 +115,12 @@ var UPDATE_LOG_HEADERS = [
   UPDATE_LOG.NEW_STATUS,
   UPDATE_LOG.OLD_LOCATION,
   UPDATE_LOG.NEW_LOCATION,
-  UPDATE_LOG.OLD_EQUIVALENT,
-  UPDATE_LOG.NEW_EQUIVALENT,
+  UPDATE_LOG.OLD_ALTERNATIVE,
+  UPDATE_LOG.NEW_ALTERNATIVE,
   UPDATE_LOG.NOTE,
   UPDATE_LOG.USER,
-  UPDATE_LOG.SOURCE
+  UPDATE_LOG.SOURCE,
+  UPDATE_LOG.FIELD
 ];
 
 var EXPIRY_HEADERS = [
@@ -137,97 +143,162 @@ var SETTINGS_HEADERS = [
   SETTINGS.USERS,
   SETTINGS.STATUSES,
   SETTINGS.LIMITED_LOCATIONS,
-  SETTINGS.EQUIVALENTS,
+  SETTINGS.ALTERNATIVES,
   SETTINGS.MONTHS,
   SETTINGS.YEARS
 ];
 
+var DEFAULT_USERS = [
+  'عبدالرحمن الثبيتي',
+  'نواف سندي',
+  'عبدالرحمن الغامدي',
+  'وعد الوقداني'
+];
+
+var DEFAULT_STATUSES = [
+  STATUS_AVAILABLE,
+  STATUS_LIMITED,
+  STATUS_UNAVAILABLE,
+  STATUS_UNKNOWN
+];
+
+var DEFAULT_LIMITED_LOCATIONS = [
+  'في الصيدلية',
+  'مكتب المشرف'
+];
+
+var DEFAULT_ALTERNATIVES = [
+  'نعم',
+  'لا',
+  STATUS_UNKNOWN
+];
+
 function doGet(e) {
   var params = e && e.parameter ? e.parameter : {};
+  var page = stringValue_(params.page || 'pharmacist');
 
-  if (params.page === 'supply') {
-    if (params.key !== SUPPLY_ACCESS_KEY) {
+  if (page === 'supply') {
+    if (stringValue_(params.key) !== SUPPLY_ACCESS_KEY) {
       return renderAccessDenied_();
     }
-    return HtmlService
-      .createTemplateFromFile('SupplyPanel')
-      .evaluate()
-      .setTitle('Inventory OPD Supply Panel')
-      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+    return renderHtml_('SupplyPanel', 'inventoryopd Supply Panel');
   }
 
+  if (page === 'pharmacist' || page === '') {
+    return renderHtml_('PharmacistDashboard', 'inventoryopd Medication Availability Dashboard');
+  }
+
+  return renderHtml_('PharmacistDashboard', 'inventoryopd Medication Availability Dashboard');
+}
+
+function renderHtml_(fileName, title) {
   return HtmlService
-    .createTemplateFromFile('PharmacistDashboard')
+    .createTemplateFromFile(fileName)
     .evaluate()
-    .setTitle('Inventory OPD Pharmacist Dashboard')
+    .setTitle(title)
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
 function renderAccessDenied_() {
-  return HtmlService
-    .createHtmlOutput(
-      '<!doctype html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">' +
-      '<meta name="viewport" content="width=device-width, initial-scale=1">' +
-      '<style>body{margin:0;font-family:Arial,Tahoma,sans-serif;background:#f4f7fb;color:#183044;display:grid;min-height:100vh;place-items:center}.card{background:#fff;border:1px solid #dce6ef;border-radius:16px;padding:28px;max-width:420px;box-shadow:0 18px 40px rgba(30,50,70,.08)}h1{margin:0 0 12px;font-size:24px}.muted{color:#687b8e;line-height:1.8}.watermark{position:fixed;inset:auto 0 16px;text-align:center;font-size:12px;color:#6d7e8f}</style>' +
-      '</head><body><main class="card"><h1>غير مصرح بالدخول</h1><p class="muted">صفحة التموين تتطلب رابطا يحتوي على مفتاح الدخول الصحيح.</p></main>' +
-      '<div class="watermark">تم انتاج وتصميم العمل بالكامل بواسطة وعد نايف الوقداني Email: waadalwagdani@gmail.com</div></body></html>'
-    )
-    .setTitle('Access denied');
+  var html = [
+    '<!doctype html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">',
+    '<meta name="viewport" content="width=device-width, initial-scale=1">',
+    '<style>',
+    'body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f6f8fb;color:#102448;font-family:Arial,Tahoma,sans-serif}',
+    '.box{width:min(92vw,460px);border:1px solid #dde6ef;border-radius:18px;background:white;padding:28px;box-shadow:0 20px 60px rgba(16,36,72,.10);text-align:center}',
+    'h1{margin:0 0 10px;font-size:24px}.muted{margin:0;color:#60708a;line-height:1.8}.watermark{position:fixed;right:0;left:0;bottom:12px;color:#7b8798;font-size:12px;text-align:center}',
+    '</style></head><body>',
+    '<main class="box"><h1>غير مصرح بالدخول</h1><p class="muted">رابط لوحة التموين غير صحيح أو لا يحتوي على مفتاح الدخول المطلوب.</p></main>',
+    '<div class="watermark">تم انتاج وتصميم العمل بالكامل بواسطة وعد نايف الوقداني Email: waadalwagdani@gmail.com</div>',
+    '</body></html>'
+  ].join('');
+  return HtmlService.createHtmlOutput(html).setTitle('غير مصرح بالدخول');
 }
 
 function getMedicines() {
   var data = readSheetRows_(SHEETS.MASTER, MASTER_HEADERS);
   return data.rows
     .filter(function (row) {
-      return valueToString_(row[MASTER.DB_ID]) ||
-        valueToString_(row[MASTER.ITEM]) ||
-        valueToString_(row[MASTER.NAME]) ||
-        valueToString_(row[MASTER.NAME_AR]);
+      return stringValue_(row[MASTER.DB_ID]) ||
+        stringValue_(row[MASTER.ITEM]) ||
+        stringValue_(row[MASTER.NAME]) ||
+        stringValue_(row[MASTER.NAME_AR]);
     })
-    .map(medicineFromMasterRow_);
+    .map(medicineFromRow_);
 }
 
-function getSettings() {
-  var data = readSheetRows_(SHEETS.SETTINGS, SETTINGS_HEADERS);
+function updateAvailability(payload) {
+  payload = payload || {};
+  var dbId = stringValue_(payload.dbId);
+  var newStatus = stringValue_(payload.status);
+  var incomingLocation = stringValue_(payload.limitedLocation);
+  var incomingAlternative = stringValue_(payload.hasAlternative);
+  var note = stringValue_(payload.note);
+  var user = stringValue_(payload.user);
 
-  var users = valuesFromColumn_(data.rows, SETTINGS.USERS, []);
-  var statuses = valuesFromColumn_(data.rows, SETTINGS.STATUSES, [
-    STATUS_AVAILABLE,
-    STATUS_LIMITED,
-    STATUS_UNAVAILABLE
-  ]);
-  var limitedLocations = valuesFromColumn_(data.rows, SETTINGS.LIMITED_LOCATIONS, [
-    'في الصيدلية',
-    'مكتب المشرف'
-  ]);
-  var equivalentOptions = valuesFromColumn_(data.rows, SETTINGS.EQUIVALENTS, [
-    'نعم',
-    'لا',
-    'غير محدد'
-  ]);
+  if (!dbId) throw new Error('يجب اختيار الدواء قبل حفظ التغيير.');
+  if (!user) throw new Error('يجب اختيار اسم المحدث قبل حفظ التغيير.');
+  validateStatus_(newStatus);
+
+  var masterData = readSheetRows_(SHEETS.MASTER, MASTER_HEADERS);
+  var row = findMasterByDbId_(masterData.rows, dbId);
+  if (!row) throw new Error('لم يتم العثور على الدواء في Master_DB.');
+
+  var oldStatus = stringValue_(row[MASTER.STATUS]) || STATUS_UNKNOWN;
+  var oldLocation = stringValue_(row[MASTER.LIMITED_LOCATION]);
+  var oldAlternative = stringValue_(row[MASTER.HAS_ALTERNATIVE]) || STATUS_UNKNOWN;
+  var oldNote = stringValue_(row[MASTER.NOTE]);
+  var finalLocation = '';
+  var finalAlternative = oldAlternative || STATUS_UNKNOWN;
+
+  if (newStatus === STATUS_LIMITED) {
+    if (DEFAULT_LIMITED_LOCATIONS.indexOf(incomingLocation) === -1) {
+      throw new Error('يجب اختيار مكان توفر الكمية المحدودة.');
+    }
+    finalLocation = incomingLocation;
+  }
+
+  if (newStatus === STATUS_UNAVAILABLE) {
+    if (DEFAULT_ALTERNATIVES.indexOf(incomingAlternative) === -1) {
+      throw new Error('يجب تحديد هل للصنف بديل مكافئ.');
+    }
+    finalAlternative = incomingAlternative;
+  }
+
+  if (newStatus === STATUS_AVAILABLE || newStatus === STATUS_LIMITED || newStatus === STATUS_UNKNOWN) {
+    finalAlternative = incomingAlternative || oldAlternative || STATUS_UNKNOWN;
+  }
+
+  var timestamp = nowTimestamp_();
+
+  setCell_(masterData.sheet, masterData.headerMap, row._rowNumber, MASTER.STATUS, newStatus);
+  setCell_(masterData.sheet, masterData.headerMap, row._rowNumber, MASTER.LIMITED_LOCATION, finalLocation);
+  setCell_(masterData.sheet, masterData.headerMap, row._rowNumber, MASTER.HAS_ALTERNATIVE, finalAlternative);
+  setCell_(masterData.sheet, masterData.headerMap, row._rowNumber, MASTER.NOTE, note);
+  setCell_(masterData.sheet, masterData.headerMap, row._rowNumber, MASTER.UPDATED_AT, timestamp);
+  setCell_(masterData.sheet, masterData.headerMap, row._rowNumber, MASTER.UPDATED_BY, user);
+  setCell_(masterData.sheet, masterData.headerMap, row._rowNumber, MASTER.SEARCH_KEY, buildSearchKey_(row));
+
+  appendRowObject_(SHEETS.UPDATE_LOG, UPDATE_LOG_HEADERS, buildAvailabilityLogRow_({
+    timestamp: timestamp,
+    medicine: row,
+    oldStatus: oldStatus,
+    newStatus: newStatus,
+    oldLocation: oldLocation,
+    newLocation: finalLocation,
+    oldAlternative: oldAlternative,
+    newAlternative: finalAlternative,
+    oldNote: oldNote,
+    note: note,
+    user: user
+  }));
 
   return {
-    users: users,
-    statuses: statuses,
-    limitedLocations: limitedLocations,
-    equivalentOptions: equivalentOptions,
-    months: buildMonthOptions_(valuesFromColumn_(data.rows, SETTINGS.MONTHS, [])),
-    years: buildYearOptions_(valuesFromColumn_(data.rows, SETTINGS.YEARS, []))
-  };
-}
-
-function getSupplyBootstrap() {
-  return {
-    settings: getSettings(),
-    medicines: getMedicines()
-  };
-}
-
-function getDashboardBootstrap() {
-  return {
-    medicines: getMedicines(),
-    expiring30: getExpiringMedications(30),
-    expiring60: getExpiringMedications(60)
+    ok: true,
+    message: 'تم حفظ التغييرات بنجاح.',
+    oldStatus: oldStatus,
+    newStatus: newStatus,
+    medicine: getMedicineByDbId_(dbId)
   };
 }
 
@@ -238,7 +309,7 @@ function getLatestUpdates(limit) {
 
   return data.rows
     .filter(function (row) {
-      return valueToString_(row[UPDATE_LOG.TYPE]) === UPDATE_TYPE_AVAILABILITY &&
+      return stringValue_(row[UPDATE_LOG.TYPE]) === UPDATE_TYPE_AVAILABILITY &&
         dateKeyFromValue_(row[UPDATE_LOG.TIMESTAMP]) === today;
     })
     .sort(function (a, b) {
@@ -250,156 +321,50 @@ function getLatestUpdates(limit) {
     .map(function (row) {
       return {
         timestamp: timestampString_(row[UPDATE_LOG.TIMESTAMP]),
-        name: valueToString_(row[UPDATE_LOG.NAME]),
-        nameAr: valueToString_(row[UPDATE_LOG.NAME_AR]),
-        itemNumber: valueToString_(row[UPDATE_LOG.ITEM]),
-        oldStatus: valueToString_(row[UPDATE_LOG.OLD_STATUS]),
-        newStatus: valueToString_(row[UPDATE_LOG.NEW_STATUS]),
-        user: valueToString_(row[UPDATE_LOG.USER])
+        name: stringValue_(row[UPDATE_LOG.NAME]),
+        nameAr: stringValue_(row[UPDATE_LOG.NAME_AR]),
+        itemNumber: stringValue_(row[UPDATE_LOG.ITEM]),
+        oldStatus: stringValue_(row[UPDATE_LOG.OLD_STATUS]),
+        newStatus: stringValue_(row[UPDATE_LOG.NEW_STATUS]),
+        user: stringValue_(row[UPDATE_LOG.USER])
       };
     });
 }
 
-function updateAvailability(payload) {
-  payload = payload || {};
-  var newStatus = valueToString_(payload.status || payload.newStatus);
-  var user = valueToString_(payload.user || payload.updatedBy);
-  var dbId = valueToString_(payload.dbId || payload.DB_ID);
-  var itemNumber = valueToString_(payload.itemNumber || payload.item);
-  var location = valueToString_(payload.location || payload.limitedLocation);
-  var equivalent = valueToString_(payload.equivalentAlternative || payload.equivalent);
-  var note = valueToString_(payload.note);
-
-  validateAvailabilityPayload_(newStatus, user, location, equivalent);
-
-  if (newStatus !== STATUS_LIMITED) {
-    location = '';
-  }
-  if (newStatus !== STATUS_UNAVAILABLE) {
-    equivalent = '';
-  }
-
-  var data = readSheetRows_(SHEETS.MASTER, MASTER_HEADERS);
-  var match = findMasterRow_(data.rows, dbId, itemNumber);
-  if (!match) {
-    throw new Error('لم يتم العثور على الدواء المطلوب في Master_DB.');
-  }
-
-  var oldStatus = valueToString_(match[MASTER.STATUS]);
-  var oldLocation = valueToString_(match[MASTER.LIMITED_LOCATION]);
-  var oldEquivalent = valueToString_(match[MASTER.EQUIVALENT]);
-  var timestamp = nowTimestamp_();
-
-  setCellByHeader_(data.sheet, data.headerMap, match._rowNumber, MASTER.STATUS, newStatus);
-  setCellByHeader_(data.sheet, data.headerMap, match._rowNumber, MASTER.LIMITED_LOCATION, location);
-  setCellByHeader_(data.sheet, data.headerMap, match._rowNumber, MASTER.EQUIVALENT, equivalent);
-  setCellByHeader_(data.sheet, data.headerMap, match._rowNumber, MASTER.SUPPLY_NOTE, note);
-  setCellByHeader_(data.sheet, data.headerMap, match._rowNumber, MASTER.UPDATED_AT, timestamp);
-  setCellByHeader_(data.sheet, data.headerMap, match._rowNumber, MASTER.UPDATED_BY, user);
-  setCellByHeader_(data.sheet, data.headerMap, match._rowNumber, MASTER.SEARCH_KEY, buildSearchKey_(match));
-
-  appendRowObject_(SHEETS.UPDATE_LOG, UPDATE_LOG_HEADERS, buildAvailabilityLogRow_({
-    timestamp: timestamp,
-    medicine: match,
-    oldStatus: oldStatus,
-    newStatus: newStatus,
-    oldLocation: oldLocation,
-    newLocation: location,
-    oldEquivalent: oldEquivalent,
-    newEquivalent: equivalent,
-    note: note,
-    user: user
-  }));
-
-  return {
-    ok: true,
-    message: 'تم حفظ تحديث التوفر.',
-    oldStatus: oldStatus,
-    newStatus: newStatus,
-    medicine: getMedicineByIdentity_(valueToString_(match[MASTER.DB_ID]), valueToString_(match[MASTER.ITEM]))
-  };
-}
-
-function addExpiryDate(payload) {
-  payload = payload || {};
-  var dbId = valueToString_(payload.dbId);
-  var itemNumber = valueToString_(payload.itemNumber);
-  var user = valueToString_(payload.user || payload.updatedBy);
-  var month = monthToNumber_(payload.month);
-  var year = Number(payload.year);
-  var note = valueToString_(payload.note);
-
-  if (!user) throw new Error('يجب اختيار اسم المحدث قبل إضافة تاريخ الانتهاء.');
-  if (!month || month < 1 || month > 12) throw new Error('يجب اختيار شهر انتهاء صحيح.');
-  if (!year || year < 2000) throw new Error('يجب اختيار سنة انتهاء صحيحة.');
-
-  var masterData = readSheetRows_(SHEETS.MASTER, MASTER_HEADERS);
-  var medicine = findMasterRow_(masterData.rows, dbId, itemNumber);
-  if (!medicine) throw new Error('لم يتم العثور على الدواء المطلوب في Master_DB.');
-
-  var timestamp = nowTimestamp_();
-  var sortDate = expirySortDate_(month, year);
-
-  appendRowObject_(SHEETS.EXPIRY, EXPIRY_HEADERS, {
-    Expiry_ID: 'EXP-' + Utilities.getUuid(),
-    DB_ID: valueToString_(medicine[MASTER.DB_ID]),
-    'Item number': valueToString_(medicine[MASTER.ITEM]),
-    Name: valueToString_(medicine[MASTER.NAME]),
-    'الإسم': valueToString_(medicine[MASTER.NAME_AR]),
-    'شهر الانتهاء': month,
-    'سنة الانتهاء': year,
-    'تاريخ الانتهاء للفرز': sortDate,
-    'حالة التاريخ': 'نشط',
-    'ملاحظة': note,
-    'آخر تحديث': timestamp,
-    'تم التحديث بواسطة': user,
-    Is_Active: 'نشط'
-  });
-
-  syncExpirySummaryForMedication_(valueToString_(medicine[MASTER.DB_ID]));
-
-  return {
-    ok: true,
-    message: 'تمت إضافة تاريخ الانتهاء.',
-    expiryDates: getExpiryDates(valueToString_(medicine[MASTER.DB_ID]))
-  };
-}
-
-function deleteExpiryDate(payload) {
-  payload = payload || {};
-  var expiryId = valueToString_(payload.expiryId || payload.id);
-  var user = valueToString_(payload.user || payload.updatedBy);
-  if (!expiryId) throw new Error('رقم تاريخ الانتهاء مطلوب.');
-  if (!user) throw new Error('يجب اختيار اسم المحدث قبل حذف تاريخ الانتهاء.');
-
+function getExpiringBuckets() {
+  var todayMillis = dateOnlyMillis_(todayKey_());
   var data = readSheetRows_(SHEETS.EXPIRY, EXPIRY_HEADERS);
-  var target = data.rows.filter(function (row) {
-    return valueToString_(row[EXPIRY.EXPIRY_ID]) === expiryId;
-  })[0];
-  if (!target) throw new Error('لم يتم العثور على تاريخ الانتهاء المطلوب.');
-
-  setCellByHeader_(data.sheet, data.headerMap, target._rowNumber, EXPIRY.IS_ACTIVE, EXPIRY_DELETED);
-  setCellByHeader_(data.sheet, data.headerMap, target._rowNumber, EXPIRY.DATE_STATUS, EXPIRY_DELETED);
-  setCellByHeader_(data.sheet, data.headerMap, target._rowNumber, EXPIRY.UPDATED_AT, nowTimestamp_());
-  setCellByHeader_(data.sheet, data.headerMap, target._rowNumber, EXPIRY.UPDATED_BY, user);
-
-  var dbId = valueToString_(target[EXPIRY.DB_ID]);
-  syncExpirySummaryForMedication_(dbId);
+  var expiring = data.rows
+    .filter(isActiveExpiry_)
+    .map(function (row) {
+      var item = expiryFromRow_(row);
+      item.daysUntil = Math.ceil((dateOnlyMillis_(item.sortDate) - todayMillis) / 86400000);
+      return item;
+    })
+    .filter(function (item) {
+      return item.daysUntil >= 0 && item.daysUntil <= 60;
+    })
+    .sort(function (a, b) {
+      if (a.daysUntil !== b.daysUntil) return a.daysUntil - b.daysUntil;
+      return stringValue_(a.name).localeCompare(stringValue_(b.name));
+    });
 
   return {
-    ok: true,
-    message: 'تم حذف تاريخ الانتهاء من السجل النشط.',
-    expiryDates: getExpiryDates(dbId)
+    within30: expiring.filter(function (item) {
+      return item.daysUntil <= 30;
+    }),
+    within60: expiring.filter(function (item) {
+      return item.daysUntil > 30 && item.daysUntil <= 60;
+    })
   };
 }
 
 function getExpiryDates(dbId) {
+  var id = stringValue_(dbId);
   var data = readSheetRows_(SHEETS.EXPIRY, EXPIRY_HEADERS);
-  var id = valueToString_(dbId);
-
   return data.rows
     .filter(function (row) {
-      return isActiveExpiry_(row) && (!id || valueToString_(row[EXPIRY.DB_ID]) === id);
+      return isActiveExpiry_(row) && (!id || stringValue_(row[EXPIRY.DB_ID]) === id);
     })
     .map(expiryFromRow_)
     .sort(function (a, b) {
@@ -407,45 +372,95 @@ function getExpiryDates(dbId) {
     });
 }
 
-function getExpiringMedications(days) {
-  var limitDays = Math.max(1, Number(days) || 30);
-  var todayMillis = dateOnlyMillis_(todayKey_());
-  var data = readSheetRows_(SHEETS.EXPIRY, EXPIRY_HEADERS);
+function addExpiryDate(payload) {
+  payload = payload || {};
+  var dbId = stringValue_(payload.dbId);
+  var month = monthToNumber_(payload.month);
+  var year = Number(payload.year);
+  var note = stringValue_(payload.note);
+  var user = stringValue_(payload.user);
 
-  return data.rows
-    .filter(isActiveExpiry_)
-    .map(function (row) {
-      var expiry = expiryFromRow_(row);
-      var diffDays = Math.ceil((dateOnlyMillis_(expiry.sortDate) - todayMillis) / 86400000);
-      expiry.daysUntil = diffDays;
-      return expiry;
-    })
-    .filter(function (expiry) {
-      return expiry.daysUntil >= 0 && expiry.daysUntil <= limitDays;
-    })
-    .sort(function (a, b) {
-      if (a.daysUntil !== b.daysUntil) return a.daysUntil - b.daysUntil;
-      return valueToString_(a.name).localeCompare(valueToString_(b.name));
-    });
+  if (!dbId) throw new Error('يجب اختيار الدواء قبل إضافة تاريخ الانتهاء.');
+  if (!user) throw new Error('يجب اختيار اسم المحدث قبل إضافة تاريخ الانتهاء.');
+  if (!month || month < 1 || month > 12) throw new Error('يجب اختيار شهر صحيح.');
+  if (!year || year < 2000) throw new Error('يجب اختيار سنة صحيحة.');
+
+  var activeDates = getExpiryDates(dbId);
+  if (activeDates.length >= 6) {
+    throw new Error('لا يمكن إضافة أكثر من 6 تواريخ انتهاء نشطة لنفس الدواء.');
+  }
+
+  var masterData = readSheetRows_(SHEETS.MASTER, MASTER_HEADERS);
+  var medicine = findMasterByDbId_(masterData.rows, dbId);
+  if (!medicine) throw new Error('لم يتم العثور على الدواء في Master_DB.');
+
+  var sortDate = lastDayOfMonthKey_(month, year);
+  var timestamp = nowTimestamp_();
+  var row = {};
+  row[EXPIRY.EXPIRY_ID] = 'EXP-' + Utilities.getUuid();
+  row[EXPIRY.DB_ID] = stringValue_(medicine[MASTER.DB_ID]);
+  row[EXPIRY.ITEM] = stringValue_(medicine[MASTER.ITEM]);
+  row[EXPIRY.NAME] = stringValue_(medicine[MASTER.NAME]);
+  row[EXPIRY.NAME_AR] = stringValue_(medicine[MASTER.NAME_AR]);
+  row[EXPIRY.MONTH] = month;
+  row[EXPIRY.YEAR] = year;
+  row[EXPIRY.SORT_DATE] = sortDate;
+  row[EXPIRY.DATE_STATUS] = expiryStatusForDate_(sortDate);
+  row[EXPIRY.NOTE] = note;
+  row[EXPIRY.UPDATED_AT] = timestamp;
+  row[EXPIRY.UPDATED_BY] = user;
+  row[EXPIRY.IS_ACTIVE] = EXPIRY_ACTIVE;
+
+  appendRowObject_(SHEETS.EXPIRY, EXPIRY_HEADERS, row);
+  syncExpirySummary_(dbId);
+
+  return {
+    ok: true,
+    message: 'تمت إضافة تاريخ الانتهاء.',
+    expiryDates: getExpiryDates(dbId)
+  };
 }
 
-function validateAvailabilityPayload_(status, user, location, equivalent) {
-  var statusOptions = [STATUS_AVAILABLE, STATUS_LIMITED, STATUS_UNAVAILABLE];
-  var locationOptions = ['في الصيدلية', 'مكتب المشرف'];
-  var equivalentOptions = ['نعم', 'لا', 'غير محدد'];
+function deleteExpiryDate(payload) {
+  payload = payload || {};
+  var expiryId = stringValue_(payload.expiryId || payload.id);
+  var user = stringValue_(payload.user);
 
-  if (statusOptions.indexOf(status) === -1) {
-    throw new Error('حالة التوفر غير صحيحة.');
-  }
-  if (!user) {
-    throw new Error('يجب اختيار اسم المحدث قبل الحفظ.');
-  }
-  if (status === STATUS_LIMITED && locationOptions.indexOf(location) === -1) {
-    throw new Error('يجب اختيار مكان توفر الكمية المحدودة.');
-  }
-  if (status === STATUS_UNAVAILABLE && equivalentOptions.indexOf(equivalent) === -1) {
-    throw new Error('يجب تحديد هل للصنف بديل مكافئ.');
-  }
+  if (!expiryId) throw new Error('رقم تاريخ الانتهاء مطلوب.');
+  if (!user) throw new Error('يجب اختيار اسم المحدث قبل حذف تاريخ الانتهاء.');
+
+  var data = readSheetRows_(SHEETS.EXPIRY, EXPIRY_HEADERS);
+  var target = data.rows.filter(function (row) {
+    return stringValue_(row[EXPIRY.EXPIRY_ID]) === expiryId;
+  })[0];
+
+  if (!target) throw new Error('لم يتم العثور على تاريخ الانتهاء.');
+
+  setCell_(data.sheet, data.headerMap, target._rowNumber, EXPIRY.IS_ACTIVE, EXPIRY_DELETED);
+  setCell_(data.sheet, data.headerMap, target._rowNumber, EXPIRY.DATE_STATUS, EXPIRY_DELETED);
+  setCell_(data.sheet, data.headerMap, target._rowNumber, EXPIRY.UPDATED_AT, nowTimestamp_());
+  setCell_(data.sheet, data.headerMap, target._rowNumber, EXPIRY.UPDATED_BY, user);
+
+  var dbId = stringValue_(target[EXPIRY.DB_ID]);
+  syncExpirySummary_(dbId);
+
+  return {
+    ok: true,
+    message: 'تم حذف تاريخ الانتهاء من القائمة النشطة.',
+    expiryDates: getExpiryDates(dbId)
+  };
+}
+
+function getSettings() {
+  var data = readSheetRows_(SHEETS.SETTINGS, SETTINGS_HEADERS);
+  return {
+    users: valuesFromColumn_(data.rows, SETTINGS.USERS, DEFAULT_USERS),
+    statuses: valuesFromColumn_(data.rows, SETTINGS.STATUSES, DEFAULT_STATUSES),
+    limitedLocations: valuesFromColumn_(data.rows, SETTINGS.LIMITED_LOCATIONS, DEFAULT_LIMITED_LOCATIONS),
+    alternativeOptions: valuesFromColumn_(data.rows, SETTINGS.ALTERNATIVES, DEFAULT_ALTERNATIVES),
+    months: buildMonthOptions_(valuesFromColumn_(data.rows, SETTINGS.MONTHS, [])),
+    years: buildYearOptions_(valuesFromColumn_(data.rows, SETTINGS.YEARS, []))
+  };
 }
 
 function buildAvailabilityLogRow_(input) {
@@ -454,131 +469,110 @@ function buildAvailabilityLogRow_(input) {
   row[UPDATE_LOG.LOG_ID] = 'LOG-' + Utilities.getUuid();
   row[UPDATE_LOG.TIMESTAMP] = input.timestamp;
   row[UPDATE_LOG.TYPE] = UPDATE_TYPE_AVAILABILITY;
-  row[UPDATE_LOG.DB_ID] = valueToString_(medicine[MASTER.DB_ID]);
-  row[UPDATE_LOG.ITEM] = valueToString_(medicine[MASTER.ITEM]);
-  row[UPDATE_LOG.NAME] = valueToString_(medicine[MASTER.NAME]);
-  row[UPDATE_LOG.NAME_AR] = valueToString_(medicine[MASTER.NAME_AR]);
+  row[UPDATE_LOG.DB_ID] = stringValue_(medicine[MASTER.DB_ID]);
+  row[UPDATE_LOG.ITEM] = stringValue_(medicine[MASTER.ITEM]);
+  row[UPDATE_LOG.NAME] = stringValue_(medicine[MASTER.NAME]);
+  row[UPDATE_LOG.NAME_AR] = stringValue_(medicine[MASTER.NAME_AR]);
   row[UPDATE_LOG.OLD_STATUS] = input.oldStatus;
   row[UPDATE_LOG.NEW_STATUS] = input.newStatus;
   row[UPDATE_LOG.OLD_LOCATION] = input.oldLocation;
   row[UPDATE_LOG.NEW_LOCATION] = input.newLocation;
-  row[UPDATE_LOG.OLD_EQUIVALENT] = input.oldEquivalent;
-  row[UPDATE_LOG.NEW_EQUIVALENT] = input.newEquivalent;
+  row[UPDATE_LOG.OLD_ALTERNATIVE] = input.oldAlternative;
+  row[UPDATE_LOG.NEW_ALTERNATIVE] = input.newAlternative;
   row[UPDATE_LOG.NOTE] = input.note;
   row[UPDATE_LOG.USER] = input.user;
-  row[UPDATE_LOG.SOURCE] = 'SupplyPanel';
+  row[UPDATE_LOG.SOURCE] = UPDATE_SOURCE_SUPPLY;
+  row[UPDATE_LOG.FIELD] = UPDATE_FIELD_AVAILABILITY;
   return row;
 }
 
-function medicineFromMasterRow_(row) {
-  var status = valueToString_(row[MASTER.STATUS]) || STATUS_AVAILABLE;
+function medicineFromRow_(row) {
   return {
-    dbId: valueToString_(row[MASTER.DB_ID]),
-    itemNumber: valueToString_(row[MASTER.ITEM]),
-    name: valueToString_(row[MASTER.NAME]),
-    nameAr: valueToString_(row[MASTER.NAME_AR]),
-    dosageForm: valueToString_(row[MASTER.FORM]),
-    dosageFormAr: valueToString_(row[MASTER.FORM_AR]),
-    status: status,
-    limitedLocation: valueToString_(row[MASTER.LIMITED_LOCATION]),
-    equivalentAlternative: valueToString_(row[MASTER.EQUIVALENT]) || 'غير محدد',
-    supplyNote: valueToString_(row[MASTER.SUPPLY_NOTE]),
+    dbId: stringValue_(row[MASTER.DB_ID]),
+    itemNumber: stringValue_(row[MASTER.ITEM]),
+    name: stringValue_(row[MASTER.NAME]),
+    nameAr: stringValue_(row[MASTER.NAME_AR]),
+    dosageForm: stringValue_(row[MASTER.FORM]),
+    dosageFormAr: stringValue_(row[MASTER.FORM_AR]),
+    status: stringValue_(row[MASTER.STATUS]) || STATUS_UNKNOWN,
+    limitedLocation: stringValue_(row[MASTER.LIMITED_LOCATION]),
+    hasAlternative: stringValue_(row[MASTER.HAS_ALTERNATIVE]) || STATUS_UNKNOWN,
+    note: stringValue_(row[MASTER.NOTE]),
     updatedAt: timestampString_(row[MASTER.UPDATED_AT]),
-    updatedBy: valueToString_(row[MASTER.UPDATED_BY]),
-    currentExpiryDates: valueToString_(row[MASTER.EXPIRY_DATES]),
+    updatedBy: stringValue_(row[MASTER.UPDATED_BY]),
+    expiryDates: stringValue_(row[MASTER.EXPIRY_DATES]),
     expiryCount: Number(row[MASTER.EXPIRY_COUNT]) || 0,
-    nearestExpiry: dateKeyFromValue_(row[MASTER.NEAREST_EXPIRY]) || valueToString_(row[MASTER.NEAREST_EXPIRY]),
-    expiryAlert: valueToString_(row[MASTER.EXPIRY_ALERT]),
-    searchKey: valueToString_(row[MASTER.SEARCH_KEY]) || buildSearchKey_(row)
+    nearestExpiry: dateKeyFromValue_(row[MASTER.NEAREST_EXPIRY]) || stringValue_(row[MASTER.NEAREST_EXPIRY]),
+    expiryAlert: stringValue_(row[MASTER.EXPIRY_ALERT]),
+    searchKey: stringValue_(row[MASTER.SEARCH_KEY]) || buildSearchKey_(row)
   };
 }
 
 function expiryFromRow_(row) {
   var month = monthToNumber_(row[EXPIRY.MONTH]);
-  var year = Number(row[EXPIRY.YEAR]);
-  var sortDate = dateKeyFromValue_(row[EXPIRY.SORT_DATE]) || (month && year ? expirySortDate_(month, year) : '');
-
+  var year = Number(row[EXPIRY.YEAR]) || '';
+  var sortDate = dateKeyFromValue_(row[EXPIRY.SORT_DATE]) || (month && year ? lastDayOfMonthKey_(month, year) : '');
   return {
-    expiryId: valueToString_(row[EXPIRY.EXPIRY_ID]),
-    dbId: valueToString_(row[EXPIRY.DB_ID]),
-    itemNumber: valueToString_(row[EXPIRY.ITEM]),
-    name: valueToString_(row[EXPIRY.NAME]),
-    nameAr: valueToString_(row[EXPIRY.NAME_AR]),
+    expiryId: stringValue_(row[EXPIRY.EXPIRY_ID]),
+    dbId: stringValue_(row[EXPIRY.DB_ID]),
+    itemNumber: stringValue_(row[EXPIRY.ITEM]),
+    name: stringValue_(row[EXPIRY.NAME]),
+    nameAr: stringValue_(row[EXPIRY.NAME_AR]),
     month: month,
     year: year,
     sortDate: sortDate,
-    dateStatus: valueToString_(row[EXPIRY.DATE_STATUS]),
-    note: valueToString_(row[EXPIRY.NOTE]),
+    dateStatus: stringValue_(row[EXPIRY.DATE_STATUS]) || expiryStatusForDate_(sortDate),
+    note: stringValue_(row[EXPIRY.NOTE]),
     updatedAt: timestampString_(row[EXPIRY.UPDATED_AT]),
-    updatedBy: valueToString_(row[EXPIRY.UPDATED_BY]),
-    isActive: valueToString_(row[EXPIRY.IS_ACTIVE]) || 'نشط'
+    updatedBy: stringValue_(row[EXPIRY.UPDATED_BY]),
+    isActive: stringValue_(row[EXPIRY.IS_ACTIVE]) || EXPIRY_ACTIVE
   };
 }
 
-function syncExpirySummaryForMedication_(dbId) {
-  var id = valueToString_(dbId);
+function syncExpirySummary_(dbId) {
+  var id = stringValue_(dbId);
   if (!id) return;
 
   var masterData = readSheetRows_(SHEETS.MASTER, MASTER_HEADERS);
-  var medicine = findMasterRow_(masterData.rows, id, '');
+  var medicine = findMasterByDbId_(masterData.rows, id);
   if (!medicine) return;
 
-  var activeDates = getExpiryDates(id).map(function (expiry) {
-    return expiry.sortDate;
+  var dates = getExpiryDates(id).map(function (item) {
+    return item.sortDate;
   }).filter(Boolean).sort();
+  var nearest = dates[0] || '';
 
-  var nearest = activeDates[0] || '';
-  setCellByHeader_(masterData.sheet, masterData.headerMap, medicine._rowNumber, MASTER.EXPIRY_DATES, activeDates.join(', '));
-  setCellByHeader_(masterData.sheet, masterData.headerMap, medicine._rowNumber, MASTER.EXPIRY_COUNT, activeDates.length);
-  setCellByHeader_(masterData.sheet, masterData.headerMap, medicine._rowNumber, MASTER.NEAREST_EXPIRY, nearest);
-  setCellByHeader_(masterData.sheet, masterData.headerMap, medicine._rowNumber, MASTER.EXPIRY_ALERT, expiryAlertForDate_(nearest));
+  setCell_(masterData.sheet, masterData.headerMap, medicine._rowNumber, MASTER.EXPIRY_DATES, dates.join(', '));
+  setCell_(masterData.sheet, masterData.headerMap, medicine._rowNumber, MASTER.EXPIRY_COUNT, dates.length);
+  setCell_(masterData.sheet, masterData.headerMap, medicine._rowNumber, MASTER.NEAREST_EXPIRY, nearest);
+  setCell_(masterData.sheet, masterData.headerMap, medicine._rowNumber, MASTER.EXPIRY_ALERT, expiryStatusForDate_(nearest));
 }
 
-function expiryAlertForDate_(dateKey) {
-  if (!dateKey) return '';
-  var diffDays = Math.ceil((dateOnlyMillis_(dateKey) - dateOnlyMillis_(todayKey_())) / 86400000);
-  if (diffDays < 0) return 'منتهي';
-  if (diffDays <= 30) return 'خلال 30 يوم';
-  if (diffDays <= 60) return 'خلال 60 يوم';
-  return '';
-}
-
-function findMasterRow_(rows, dbId, itemNumber) {
-  var id = valueToString_(dbId);
-  var item = valueToString_(itemNumber);
+function findMasterByDbId_(rows, dbId) {
+  var id = stringValue_(dbId);
   return rows.filter(function (row) {
-    return (id && valueToString_(row[MASTER.DB_ID]) === id) ||
-      (item && valueToString_(row[MASTER.ITEM]) === item);
+    return stringValue_(row[MASTER.DB_ID]) === id;
   })[0] || null;
 }
 
-function getMedicineByIdentity_(dbId, itemNumber) {
+function getMedicineByDbId_(dbId) {
   var data = readSheetRows_(SHEETS.MASTER, MASTER_HEADERS);
-  var row = findMasterRow_(data.rows, dbId, itemNumber);
-  return row ? medicineFromMasterRow_(row) : null;
+  var row = findMasterByDbId_(data.rows, dbId);
+  return row ? medicineFromRow_(row) : null;
 }
 
-function appendRowObject_(sheetName, requiredHeaders, object) {
-  var sheet = ensureSheet_(sheetName, requiredHeaders);
-  var headers = getHeaders_(sheet);
-  var row = headers.map(function (header) {
-    return Object.prototype.hasOwnProperty.call(object, header) ? object[header] : '';
-  });
-  sheet.appendRow(row);
-}
-
-function readSheetRows_(sheetName, requiredHeaders) {
-  var sheet = ensureSheet_(sheetName, requiredHeaders);
-  var headers = getHeaders_(sheet);
-  var headerMap = headerMapFromHeaders_(headers);
+function readSheetRows_(sheetName, headers) {
+  var sheet = ensureSheet_(sheetName, headers);
+  var sheetHeaders = getHeaders_(sheet);
+  var headerMap = headerMap_(sheetHeaders);
   var lastRow = sheet.getLastRow();
   var rows = [];
 
-  if (lastRow >= 2) {
-    var values = sheet.getRange(2, 1, lastRow - 1, sheet.getLastColumn()).getValues();
-    rows = values
-      .map(function (valuesRow, index) {
-        return rowObject_(headers, valuesRow, index + 2);
+  if (lastRow > 1) {
+    rows = sheet.getRange(2, 1, lastRow - 1, sheet.getLastColumn())
+      .getValues()
+      .map(function (values, index) {
+        return rowObject_(sheetHeaders, values, index + 2);
       })
       .filter(function (row) {
         return !row._isBlank;
@@ -587,7 +581,7 @@ function readSheetRows_(sheetName, requiredHeaders) {
 
   return {
     sheet: sheet,
-    headers: headers,
+    headers: sheetHeaders,
     headerMap: headerMap,
     rows: rows
   };
@@ -595,44 +589,46 @@ function readSheetRows_(sheetName, requiredHeaders) {
 
 function ensureSheet_(sheetName, requiredHeaders) {
   var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = spreadsheet.getSheetByName(sheetName);
-  if (!sheet) {
-    sheet = spreadsheet.insertSheet(sheetName);
+  if (!spreadsheet) {
+    throw new Error('لم يتم العثور على ملف Google Sheets المرتبط بالتطبيق.');
   }
+  var sheet = spreadsheet.getSheetByName(sheetName);
+  if (!sheet) sheet = spreadsheet.insertSheet(sheetName);
   ensureHeaders_(sheet, requiredHeaders);
   return sheet;
 }
 
 function ensureHeaders_(sheet, requiredHeaders) {
-  if (sheet.getLastRow() === 0 || sheet.getLastColumn() === 0) {
+  if (sheet.getLastColumn() === 0 || sheet.getLastRow() === 0) {
     sheet.getRange(1, 1, 1, requiredHeaders.length).setValues([requiredHeaders]);
     sheet.setFrozenRows(1);
     return;
   }
 
-  var lastColumn = sheet.getLastColumn();
-  var existingHeaders = sheet.getRange(1, 1, 1, lastColumn).getValues()[0].map(normalizeHeader_);
-  var missingHeaders = requiredHeaders.filter(function (header) {
-    return existingHeaders.indexOf(header) === -1;
+  var currentHeaders = getHeaders_(sheet);
+  var missing = requiredHeaders.filter(function (header) {
+    return currentHeaders.indexOf(header) === -1;
   });
 
-  if (missingHeaders.length) {
-    sheet.getRange(1, lastColumn + 1, 1, missingHeaders.length).setValues([missingHeaders]);
+  if (missing.length) {
+    sheet.getRange(1, sheet.getLastColumn() + 1, 1, missing.length).setValues([missing]);
   }
+
   sheet.setFrozenRows(1);
 }
 
 function getHeaders_(sheet) {
-  if (sheet.getLastColumn() === 0) return [];
-  return sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(normalizeHeader_);
+  return sheet.getRange(1, 1, 1, Math.max(1, sheet.getLastColumn()))
+    .getValues()[0]
+    .map(function (header) {
+      return stringValue_(header);
+    });
 }
 
-function headerMapFromHeaders_(headers) {
+function headerMap_(headers) {
   var map = {};
   headers.forEach(function (header, index) {
-    if (header && !map[header]) {
-      map[header] = index + 1;
-    }
+    if (header && !map[header]) map[header] = index + 1;
   });
   return map;
 }
@@ -641,7 +637,7 @@ function rowObject_(headers, values, rowNumber) {
   var object = {
     _rowNumber: rowNumber,
     _isBlank: values.every(function (value) {
-      return valueToString_(value) === '';
+      return stringValue_(value) === '';
     })
   };
   headers.forEach(function (header, index) {
@@ -650,59 +646,70 @@ function rowObject_(headers, values, rowNumber) {
   return object;
 }
 
-function setCellByHeader_(sheet, headerMap, rowNumber, header, value) {
+function setCell_(sheet, headerMap, rowNumber, header, value) {
   var column = headerMap[header];
   if (!column) {
     ensureHeaders_(sheet, [header]);
-    headerMap = headerMapFromHeaders_(getHeaders_(sheet));
-    column = headerMap[header];
+    column = headerMap_(getHeaders_(sheet))[header];
   }
   sheet.getRange(rowNumber, column).setValue(value);
 }
 
-function valuesFromColumn_(rows, header, fallback) {
-  var values = rows.map(function (row) {
-    return valueToString_(row[header]);
-  }).filter(Boolean);
-
-  return uniqueValues_(values.length ? values : fallback);
+function appendRowObject_(sheetName, headers, object) {
+  var sheet = ensureSheet_(sheetName, headers);
+  var currentHeaders = getHeaders_(sheet);
+  var values = currentHeaders.map(function (header) {
+    return Object.prototype.hasOwnProperty.call(object, header) ? object[header] : '';
+  });
+  sheet.appendRow(values);
 }
 
-function buildMonthOptions_(rawValues) {
-  var values = rawValues.length ? rawValues : ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
-  return values.map(function (value) {
+function valuesFromColumn_(rows, header, fallbackValues) {
+  var values = rows.map(function (row) {
+    return stringValue_(row[header]);
+  }).filter(Boolean);
+  return unique_(values.length ? values : fallbackValues);
+}
+
+function buildMonthOptions_(values) {
+  var source = values.length ? values : ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
+  return source.map(function (value) {
     var number = monthToNumber_(value);
     return {
       value: number,
-      label: number ? pad2_(number) : valueToString_(value)
+      label: number ? pad2_(number) : stringValue_(value)
     };
-  }).filter(function (month) {
-    return month.value >= 1 && month.value <= 12;
+  }).filter(function (item) {
+    return item.value >= 1 && item.value <= 12;
   });
 }
 
-function buildYearOptions_(rawValues) {
-  if (rawValues.length) return rawValues.map(valueToString_);
-  var currentYear = Number(Utilities.formatDate(new Date(), APP_TIMEZONE, 'yyyy'));
+function buildYearOptions_(values) {
+  if (values.length) return values.map(stringValue_);
+  var current = Number(Utilities.formatDate(new Date(), APP_TIMEZONE, 'yyyy'));
   var years = [];
-  for (var offset = 0; offset <= 6; offset += 1) {
-    years.push(String(currentYear + offset));
-  }
+  for (var i = 0; i <= 7; i += 1) years.push(String(current + i));
   return years;
+}
+
+function validateStatus_(status) {
+  if (DEFAULT_STATUSES.indexOf(status) === -1) {
+    throw new Error('حالة التوفر غير صحيحة.');
+  }
+}
+
+function isActiveExpiry_(row) {
+  return stringValue_(row[EXPIRY.IS_ACTIVE]) !== EXPIRY_DELETED;
 }
 
 function buildSearchKey_(row) {
   return [
-    valueToString_(row[MASTER.NAME]),
-    valueToString_(row[MASTER.NAME_AR]),
-    valueToString_(row[MASTER.ITEM]),
-    valueToString_(row[MASTER.FORM]),
-    valueToString_(row[MASTER.FORM_AR])
-  ].filter(Boolean).join(' | ').toLowerCase();
-}
-
-function isActiveExpiry_(row) {
-  return valueToString_(row[EXPIRY.IS_ACTIVE]) !== EXPIRY_DELETED;
+    row[MASTER.NAME],
+    row[MASTER.NAME_AR],
+    row[MASTER.ITEM],
+    row[MASTER.FORM],
+    row[MASTER.FORM_AR]
+  ].map(stringValue_).filter(Boolean).join(' | ').toLowerCase();
 }
 
 function nowTimestamp_() {
@@ -718,7 +725,7 @@ function timestampString_(value) {
   if (Object.prototype.toString.call(value) === '[object Date]' && !isNaN(value.getTime())) {
     return Utilities.formatDate(value, APP_TIMEZONE, 'yyyy-MM-dd HH:mm:ss');
   }
-  return valueToString_(value);
+  return stringValue_(value);
 }
 
 function dateKeyFromValue_(value) {
@@ -726,13 +733,11 @@ function dateKeyFromValue_(value) {
   if (Object.prototype.toString.call(value) === '[object Date]' && !isNaN(value.getTime())) {
     return Utilities.formatDate(value, APP_TIMEZONE, 'yyyy-MM-dd');
   }
-  var text = valueToString_(value);
+  var text = stringValue_(value);
   var match = text.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (match) return match[1] + '-' + match[2] + '-' + match[3];
   var parsed = new Date(text);
-  if (!isNaN(parsed.getTime())) {
-    return Utilities.formatDate(parsed, APP_TIMEZONE, 'yyyy-MM-dd');
-  }
+  if (!isNaN(parsed.getTime())) return Utilities.formatDate(parsed, APP_TIMEZONE, 'yyyy-MM-dd');
   return '';
 }
 
@@ -741,7 +746,7 @@ function timestampMillis_(value) {
   if (Object.prototype.toString.call(value) === '[object Date]' && !isNaN(value.getTime())) {
     return value.getTime();
   }
-  var text = valueToString_(value);
+  var text = stringValue_(value);
   var match = text.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/);
   if (match) {
     return Date.UTC(
@@ -758,75 +763,64 @@ function timestampMillis_(value) {
 }
 
 function dateOnlyMillis_(dateKey) {
-  var text = valueToString_(dateKey);
-  var match = text.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  var match = stringValue_(dateKey).match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (!match) return 0;
   return Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
 }
 
-function expirySortDate_(month, year) {
+function lastDayOfMonthKey_(month, year) {
   var date = new Date(Date.UTC(Number(year), Number(month), 0));
-  return [
-    date.getUTCFullYear(),
-    pad2_(date.getUTCMonth() + 1),
-    pad2_(date.getUTCDate())
-  ].join('-');
+  return date.getUTCFullYear() + '-' + pad2_(date.getUTCMonth() + 1) + '-' + pad2_(date.getUTCDate());
+}
+
+function expiryStatusForDate_(dateKey) {
+  if (!dateKey) return '';
+  var days = Math.ceil((dateOnlyMillis_(dateKey) - dateOnlyMillis_(todayKey_())) / 86400000);
+  if (days < 0) return 'منتهي';
+  if (days <= 30) return 'قريب الانتهاء';
+  if (days <= 60) return 'تحذير خلال 60 يوم';
+  return EXPIRY_ACTIVE;
 }
 
 function monthToNumber_(value) {
-  var text = valueToString_(value);
+  var text = stringValue_(value);
   var numeric = Number(text);
   if (numeric >= 1 && numeric <= 12) return numeric;
-
-  var normalized = text.replace(/\s+/g, '');
-  var months = {
+  var clean = text.replace(/\s+/g, '');
+  var names = {
     يناير: 1,
-    جانفي: 1,
     فبراير: 2,
-    فيفري: 2,
     مارس: 3,
     ابريل: 4,
     أبريل: 4,
-    افريل: 4,
     مايو: 5,
-    ماي: 5,
     يونيو: 6,
-    جوان: 6,
     يوليو: 7,
-    جويلية: 7,
     اغسطس: 8,
     أغسطس: 8,
-    اوت: 8,
     سبتمبر: 9,
-    شتنبر: 9,
     اكتوبر: 10,
     أكتوبر: 10,
     نوفمبر: 11,
-    دجنبر: 12,
     ديسمبر: 12
   };
-  return months[normalized] || 0;
+  return names[clean] || 0;
 }
 
-function uniqueValues_(values) {
+function unique_(values) {
   var seen = {};
-  return values.filter(function (value) {
-    var key = valueToString_(value);
-    if (!key || seen[key]) return false;
-    seen[key] = true;
+  return values.map(stringValue_).filter(function (value) {
+    if (!value || seen[value]) return false;
+    seen[value] = true;
     return true;
   });
 }
 
-function normalizeHeader_(value) {
-  return valueToString_(value);
-}
-
-function valueToString_(value) {
+function stringValue_(value) {
   if (value === null || value === undefined) return '';
   return String(value).trim();
 }
 
-function pad2_(number) {
-  return String(number).padStart(2, '0');
+function pad2_(value) {
+  return String(value).padStart(2, '0');
 }

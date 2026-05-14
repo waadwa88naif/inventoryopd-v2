@@ -4,25 +4,30 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <base target="_top">
-  <title>Inventory OPD Supply Panel</title>
+  <title>inventoryopd | Supply Mobile Panel</title>
   <style>
     :root {
-      --bg: #f4f7fb;
+      --bg: #f7f9fc;
       --panel: #ffffff;
-      --line: #d9e4ed;
-      --ink: #172f42;
-      --muted: #6a7c8c;
-      --teal: #0d8d82;
-      --teal-soft: #e3f4f2;
-      --green: #12814e;
-      --green-soft: #e7f6ee;
-      --amber: #aa6b14;
-      --amber-soft: #fff4df;
-      --red: #ba2d3a;
-      --red-soft: #fde9eb;
-      --blue: #255f9d;
-      --blue-soft: #e8f1fb;
-      --shadow: 0 16px 38px rgba(23, 47, 66, .08);
+      --soft: #f8fbff;
+      --line: #dce6f2;
+      --line-strong: #c5d5ea;
+      --ink: #071949;
+      --ink-2: #17345d;
+      --muted: #667792;
+      --blue: #075fd8;
+      --blue-2: #064caa;
+      --blue-soft: #eaf2ff;
+      --green: #11854e;
+      --green-soft: #e9f7ef;
+      --amber: #d97706;
+      --amber-soft: #fff5e7;
+      --red: #df1f37;
+      --red-soft: #fff0f2;
+      --gray: #64748b;
+      --gray-soft: #f1f5f9;
+      --shadow: 0 20px 48px rgba(7, 25, 73, .10);
+      --radius: 20px;
     }
 
     * {
@@ -35,8 +40,8 @@
       color: var(--ink);
       font-family: Arial, "Tahoma", sans-serif;
       background:
-        linear-gradient(180deg, rgba(227, 244, 242, .82), rgba(244, 247, 251, 0) 330px),
-        var(--bg);
+        radial-gradient(circle at 15% 5%, rgba(7, 95, 216, .08), transparent 36vw),
+        linear-gradient(180deg, #ffffff 0%, var(--bg) 64%, #f5f7fb 100%);
     }
 
     button,
@@ -51,22 +56,57 @@
     }
 
     .app {
-      width: min(100% - 24px, 760px);
+      width: min(100% - 24px, 520px);
       margin: 0 auto;
-      padding: 18px 0 76px;
+      padding: 18px 0 72px;
+    }
+
+    .phone-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      min-height: 48px;
+      margin-bottom: 18px;
+    }
+
+    .icon-btn {
+      display: inline-grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border: 0;
+      border-radius: 14px;
+      background: transparent;
+      color: var(--ink);
+      font-size: 25px;
+      font-weight: 900;
+    }
+
+    .icon-btn:hover {
+      background: var(--blue-soft);
+    }
+
+    .screen {
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
     }
 
     .hero {
       display: grid;
-      gap: 8px;
-      margin-bottom: 14px;
+      place-items: center;
+      gap: 12px;
+      min-height: 230px;
+      text-align: center;
     }
 
-    .eyebrow {
+    .brand {
       margin: 0;
-      color: var(--teal);
-      font-size: 12px;
-      font-weight: 800;
+      color: var(--blue);
+      font-size: 13px;
+      font-weight: 900;
     }
 
     h1,
@@ -76,238 +116,399 @@
       margin-top: 0;
     }
 
-    h1 {
-      margin-bottom: 0;
-      font-size: 26px;
-      line-height: 1.35;
+    .hero h1,
+    .view-title {
+      margin: 0;
+      color: var(--ink);
+      font-size: clamp(30px, 8vw, 44px);
+      line-height: 1.2;
+      letter-spacing: 0;
     }
 
     .subtitle {
-      margin: 0;
+      margin: 6px 0 0;
       color: var(--muted);
-      font-size: 13px;
-      line-height: 1.7;
+      font-size: 17px;
+      line-height: 1.6;
     }
 
-    .panel,
-    .selected-card,
-    .medicine-row {
+    .user-card,
+    .home-card,
+    .search-card,
+    .medicine-card,
+    .choice-card,
+    .status-area,
+    .expiry-row,
+    .save-area {
       border: 1px solid var(--line);
-      border-radius: 8px;
-      background: var(--panel);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, .92);
       box-shadow: var(--shadow);
     }
 
-    .panel {
+    .user-card {
       display: grid;
-      gap: 14px;
+      gap: 8px;
       padding: 14px;
-      margin-bottom: 14px;
-    }
-
-    .field {
-      display: grid;
-      gap: 7px;
+      margin-bottom: 18px;
     }
 
     label,
     .label {
       color: var(--muted);
       font-size: 12px;
-      font-weight: 800;
+      font-weight: 900;
+      line-height: 1.5;
     }
 
-    input,
     select,
+    input,
     textarea {
       width: 100%;
-      border: 1px solid #c7d7e3;
-      border-radius: 8px;
-      background: #fbfdff;
+      border: 1px solid var(--line-strong);
+      border-radius: 15px;
+      background: #ffffff;
       color: var(--ink);
       outline: none;
     }
 
-    input,
-    select {
-      height: 46px;
-      padding: 0 12px;
+    select,
+    input {
+      height: 50px;
+      padding: 0 14px;
     }
 
     textarea {
-      min-height: 80px;
+      min-height: 78px;
       resize: vertical;
-      padding: 12px;
+      padding: 12px 14px;
       line-height: 1.7;
     }
 
-    input:focus,
     select:focus,
+    input:focus,
     textarea:focus {
-      border-color: var(--teal);
-      box-shadow: 0 0 0 3px rgba(13, 141, 130, .12);
+      border-color: #8fb8ff;
+      box-shadow: 0 0 0 4px rgba(7, 95, 216, .12);
     }
 
-    .letter-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 7px;
+    .home-actions {
+      display: grid;
+      gap: 22px;
+      margin-top: 24px;
     }
 
-    .letter-btn,
-    .ghost-btn,
-    .primary-btn,
-    .danger-btn {
-      min-height: 40px;
-      border-radius: 8px;
-      font-weight: 800;
-    }
-
-    .letter-btn,
-    .ghost-btn {
-      border: 1px solid #c7d7e3;
-      background: #fbfdff;
+    .home-card {
+      display: grid;
+      grid-template-columns: 54px 1fr 34px;
+      gap: 16px;
+      align-items: center;
+      min-height: 136px;
+      width: 100%;
+      padding: 18px;
       color: var(--ink);
-    }
-
-    .letter-btn {
-      min-width: 36px;
-      padding: 0 9px;
-      font-size: 13px;
-    }
-
-    .ghost-btn {
-      padding: 0 13px;
-    }
-
-    .letter-btn.active,
-    .letter-btn:hover,
-    .ghost-btn:hover {
-      border-color: var(--teal);
-      background: var(--teal-soft);
-      color: #075e57;
-    }
-
-    .primary-btn {
-      width: 100%;
-      border: 0;
-      background: var(--teal);
-      color: #fff;
-      padding: 0 16px;
-      box-shadow: 0 12px 24px rgba(13, 141, 130, .18);
-    }
-
-    .primary-btn:disabled {
-      cursor: not-allowed;
-      opacity: .55;
-      box-shadow: none;
-    }
-
-    .danger-btn {
-      border: 1px solid #f2b4bd;
-      background: var(--red-soft);
-      color: var(--red);
-      padding: 0 12px;
-    }
-
-    .medicine-list {
-      display: grid;
-      gap: 8px;
-      max-height: 310px;
-      overflow: auto;
-    }
-
-    .medicine-row {
-      display: grid;
-      gap: 4px;
-      width: 100%;
-      padding: 12px;
       text-align: right;
     }
 
-    .medicine-row:hover,
-    .medicine-row.active {
-      border-color: var(--teal);
-      background: var(--teal-soft);
+    .home-card:hover {
+      border-color: #a9c8ff;
+      transform: translateY(-1px);
     }
 
-    .medicine-row strong {
-      font-size: 14px;
-      line-height: 1.5;
+    .home-icon {
+      display: grid;
+      place-items: center;
+      width: 54px;
+      height: 54px;
+      border-radius: 20px;
+      background: var(--blue-soft);
+      color: var(--blue);
+      font-size: 25px;
+      font-weight: 900;
+    }
+
+    .arrow {
+      color: var(--blue-2);
+      font-size: 30px;
+      font-weight: 900;
+    }
+
+    .view-head {
+      display: grid;
+      place-items: center;
+      margin: 0 0 18px;
+      text-align: center;
+    }
+
+    .search-card {
+      display: grid;
+      gap: 12px;
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+
+    .search-wrap {
+      position: relative;
+    }
+
+    .search-icon {
+      position: absolute;
+      top: 50%;
+      right: 16px;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 22px;
+      font-weight: 900;
+    }
+
+    .search-input {
+      padding-right: 48px;
+    }
+
+    .letter-strip {
+      display: flex;
+      gap: 7px;
+      overflow-x: auto;
+      padding: 2px 0 6px;
+    }
+
+    .letter-btn {
+      flex: 0 0 auto;
+      min-width: 34px;
+      height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #ffffff;
+      color: var(--ink-2);
+      font-weight: 900;
+    }
+
+    .letter-btn.active,
+    .letter-btn:hover {
+      border-color: var(--blue);
+      background: var(--blue);
+      color: #ffffff;
+    }
+
+    .dropdown-list {
+      display: none;
+      max-height: 220px;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #ffffff;
+      box-shadow: 0 16px 42px rgba(7, 25, 73, .12);
+    }
+
+    .dropdown-list.open {
+      display: block;
+    }
+
+    .dropdown-item {
+      display: grid;
+      width: 100%;
+      gap: 3px;
+      padding: 12px 14px;
+      border: 0;
+      border-bottom: 1px solid #edf2f8;
+      background: transparent;
+      color: var(--ink);
+      text-align: right;
+    }
+
+    .dropdown-item:hover {
+      background: #f3f7ff;
+    }
+
+    .medicine-card {
+      display: grid;
+      grid-template-columns: 54px 1fr;
+      gap: 14px;
+      align-items: center;
+      padding: 14px;
+      margin-bottom: 14px;
+      box-shadow: none;
+    }
+
+    .pill-icon {
+      display: grid;
+      place-items: center;
+      width: 54px;
+      height: 54px;
+      border-radius: 22px;
+      background: var(--blue-soft);
+      color: var(--blue);
+      font-size: 23px;
+      font-weight: 900;
+    }
+
+    .medicine-card h2 {
+      margin: 0 0 4px;
+      font-size: 19px;
+      line-height: 1.45;
     }
 
     .tiny {
       color: var(--muted);
-      font-size: 11px;
-      line-height: 1.6;
+      font-size: 12px;
+      line-height: 1.55;
     }
 
-    .selected-card {
+    .status-area {
       display: grid;
-      gap: 12px;
+      gap: 14px;
       padding: 14px;
+      margin-bottom: 14px;
       box-shadow: none;
     }
 
-    .selected-head {
+    .choice-grid {
       display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 12px;
-      align-items: start;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
     }
 
-    .selected-head h2 {
-      margin: 0 0 4px;
-      font-size: 17px;
-      line-height: 1.5;
+    .choice-grid.two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .chip {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 28px;
-      padding: 5px 10px;
-      border-radius: 999px;
+    .choice-card {
+      display: grid;
+      place-items: center;
+      gap: 7px;
+      min-height: 82px;
+      padding: 11px 8px;
+      border-color: var(--line);
+      box-shadow: none;
+      color: var(--ink-2);
+      text-align: center;
+      font-weight: 900;
+      line-height: 1.35;
+    }
+
+    .choice-card span {
+      color: var(--muted);
       font-size: 12px;
-      font-weight: 800;
-      white-space: nowrap;
+      font-weight: 700;
     }
 
-    .available {
+    .choice-grid.has-selection .choice-card:not(.selected) {
+      opacity: .48;
+      filter: grayscale(.8);
+    }
+
+    .choice-card.selected {
+      border-width: 2px;
+      background: #ffffff;
+      opacity: 1;
+      filter: none;
+    }
+
+    .choice-card.available.selected {
+      border-color: var(--green);
       background: var(--green-soft);
       color: var(--green);
     }
 
-    .limited {
+    .choice-card.limited.selected {
+      border-color: var(--amber);
       background: var(--amber-soft);
       color: var(--amber);
     }
 
-    .unavailable {
+    .choice-card.unavailable.selected {
+      border-color: var(--red);
       background: var(--red-soft);
       color: var(--red);
     }
 
-    .form-grid {
-      display: grid;
-      gap: 12px;
+    .choice-card.blue.selected {
+      border-color: var(--blue);
+      background: var(--blue-soft);
+      color: var(--blue);
     }
 
     .conditional {
       display: none;
+      gap: 10px;
     }
 
     .conditional.open {
       display: grid;
     }
 
+    .save-area {
+      display: grid;
+      gap: 10px;
+      padding: 14px;
+      margin-bottom: 14px;
+      box-shadow: none;
+    }
+
+    .primary-btn {
+      width: 100%;
+      min-height: 58px;
+      border: 0;
+      border-radius: 16px;
+      background: linear-gradient(180deg, #0b6cef, #075fd8);
+      color: #ffffff;
+      font-size: 20px;
+      font-weight: 900;
+      box-shadow: 0 16px 30px rgba(7, 95, 216, .24);
+    }
+
+    .primary-btn span {
+      display: block;
+      margin-top: 2px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .primary-btn:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .expiry-list {
+      display: grid;
+      gap: 8px;
+      margin: 12px 0 18px;
+    }
+
+    .expiry-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      min-height: 54px;
+      padding: 10px 12px;
+      box-shadow: none;
+    }
+
+    .danger-btn {
+      min-width: 76px;
+      min-height: 38px;
+      border: 1px solid #f3b4bf;
+      border-radius: 12px;
+      background: var(--red-soft);
+      color: var(--red);
+      font-weight: 900;
+    }
+
+    .two-fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
     .message {
       display: none;
+      border-radius: 14px;
       padding: 12px;
-      border-radius: 8px;
       line-height: 1.7;
       font-size: 13px;
+      font-weight: 800;
     }
 
     .message.open {
@@ -321,41 +522,22 @@
     }
 
     .message.error {
-      border: 1px solid #f0b6bf;
+      border: 1px solid #f3b4bf;
       background: var(--red-soft);
       color: var(--red);
     }
 
-    .expiry-list {
-      display: grid;
-      gap: 8px;
-    }
-
-    .expiry-row {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 10px;
-      align-items: center;
-      padding: 10px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #fbfdff;
-    }
-
-    .two-col {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-
     .empty {
-      padding: 14px;
-      border: 1px dashed #bed0dc;
-      border-radius: 8px;
-      background: #fbfdff;
+      display: grid;
+      place-items: center;
+      min-height: 92px;
+      border: 1px dashed #bfd0e5;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, .78);
       color: var(--muted);
-      line-height: 1.8;
+      padding: 14px;
       text-align: center;
+      line-height: 1.7;
     }
 
     .watermark {
@@ -363,405 +545,524 @@
       right: 0;
       bottom: 10px;
       left: 0;
-      z-index: 10;
-      color: #607386;
-      font-size: 12px;
+      z-index: 20;
+      color: #8a97aa;
+      font-size: 11px;
       text-align: center;
       pointer-events: none;
     }
 
-    @media (min-width: 820px) {
+    @media (min-width: 780px) {
       .app {
-        width: min(100% - 40px, 1040px);
+        width: min(100% - 42px, 920px);
       }
 
-      .desktop-grid {
-        display: grid;
-        grid-template-columns: 390px 1fr;
-        gap: 14px;
-        align-items: start;
+      .home-actions {
+        grid-template-columns: 1fr 1fr;
       }
     }
 
-    @media (max-width: 520px) {
-      h1 {
-        font-size: 22px;
+    @media (max-width: 430px) {
+      .app {
+        width: min(100% - 18px, 520px);
       }
 
-      .selected-head,
-      .expiry-row,
-      .two-col {
+      .choice-grid,
+      .choice-grid.two,
+      .two-fields {
         grid-template-columns: 1fr;
+      }
+
+      .home-card {
+        grid-template-columns: 48px 1fr 28px;
       }
     }
   </style>
 </head>
 <body>
   <main class="app">
-    <header class="hero">
-      <p class="eyebrow">Inventory OPD Supply</p>
-      <h1>لوحة تحديث توفر الأدوية</h1>
-      <p class="subtitle">واجهة التموين لتحديث الحالة الحالية وتواريخ الانتهاء.</p>
-    </header>
+    <div class="phone-top">
+      <button id="backButton" class="icon-btn" type="button" aria-label="Back">‹</button>
+      <strong>inventoryopd</strong>
+      <button id="homeButton" class="icon-btn" type="button" aria-label="Home">≡</button>
+    </div>
 
-    <section class="panel">
-      <div class="field">
-        <label for="userSelect">اسم المحدث من Settings</label>
-        <select id="userSelect">
-          <option value="">جاري التحميل...</option>
-        </select>
+    <section id="homeScreen" class="screen active">
+      <div class="hero">
+        <p class="brand">inventoryopd</p>
+        <div>
+          <h1>تحديث توفر الأدوية</h1>
+          <p class="subtitle">Medication Availability Update</p>
+        </div>
+        <p class="subtitle">حدث توفر الأدوية وتواريخ الانتهاء بدقة لضمان إدارة مخزون فعالة.</p>
       </div>
-      <div id="globalMessage" class="message"></div>
+
+      <div class="user-card">
+        <label for="userSelect">اسم المحدث / Updated by</label>
+        <select id="userSelect"><option value="">جاري التحميل...</option></select>
+      </div>
+
+      <div class="home-actions">
+        <button class="home-card" type="button" data-open-view="availability">
+          <span class="home-icon">Rx</span>
+          <span>
+            <strong>توفر الأدوية</strong>
+            <span class="subtitle">Availability updates</span>
+          </span>
+          <span class="arrow">›</span>
+        </button>
+        <button class="home-card" type="button" data-open-view="expiry">
+          <span class="home-icon">MM</span>
+          <span>
+            <strong>تواريخ الانتهاء</strong>
+            <span class="subtitle">Expiry dates</span>
+          </span>
+          <span class="arrow">›</span>
+        </button>
+      </div>
+
+      <div id="homeMessage" class="message"></div>
     </section>
 
-    <div class="desktop-grid">
-      <section class="panel">
-        <div class="field">
-          <label for="searchInput">بحث يبدأ بنفس النص فقط</label>
-          <input id="searchInput" type="search" autocomplete="off" placeholder="اكتب بداية الاسم أو رقم الصنف">
+    <section id="availabilityScreen" class="screen">
+      <header class="view-head">
+        <h1 class="view-title">توفر الأدوية</h1>
+        <p class="subtitle">Availability updates</p>
+      </header>
+
+      <div id="availabilitySearch"></div>
+      <div id="availabilitySelected"></div>
+
+      <section class="status-area">
+        <div class="label">اختر حالة التوفر</div>
+        <div id="statusChoices" class="choice-grid">
+          <button class="choice-card available" type="button" data-status="متوفر">متوفر<span>Available</span></button>
+          <button class="choice-card limited" type="button" data-status="كمية محدودة">كمية محدودة<span>Limited Stock</span></button>
+          <button class="choice-card unavailable" type="button" data-status="غير متوفر">غير متوفر<span>Unavailable</span></button>
         </div>
 
-        <div class="field">
-          <div class="label">اختيار حرف</div>
-          <div id="englishLetters" class="letter-group"></div>
-          <div id="arabicLetters" class="letter-group"></div>
-        </div>
-
-        <div class="field">
-          <div class="label">قائمة الأدوية</div>
-          <div id="medicineList" class="medicine-list">
-            <div class="empty">جاري تحميل الأدوية...</div>
+        <div id="limitedLocationGroup" class="conditional">
+          <div class="label">مكان التوفر</div>
+          <div id="locationChoices" class="choice-grid two">
+            <button class="choice-card blue" type="button" data-location="في الصيدلية">في الصيدلية<span>In Pharmacy</span></button>
+            <button class="choice-card blue" type="button" data-location="مكتب المشرف">مكتب المشرف<span>Supervisor Office</span></button>
           </div>
         </div>
-      </section>
 
-      <section class="panel">
-        <div id="selectedMedicine" class="selected-card">
-          <div class="empty">اختر دواء من القائمة لعرض نموذج التحديث.</div>
+        <div id="alternativeGroup" class="conditional">
+          <div class="label">هل للصنف بديل مكافئ؟</div>
+          <div id="alternativeChoices" class="choice-grid">
+            <button class="choice-card blue" type="button" data-alternative="نعم">نعم<span>Yes</span></button>
+            <button class="choice-card blue" type="button" data-alternative="لا">لا<span>No</span></button>
+            <button class="choice-card blue" type="button" data-alternative="غير محدد">غير محدد<span>Not specified</span></button>
+          </div>
+        </div>
+
+        <div>
+          <label for="availabilityNote">ملاحظة التموين / Note</label>
+          <textarea id="availabilityNote" placeholder="اختياري"></textarea>
         </div>
       </section>
-    </div>
+
+      <section class="save-area">
+        <button id="saveAvailability" class="primary-btn" type="button">حفظ التغييرات<span>Save changes</span></button>
+        <p class="tiny">يتم إرسال التغييرات إلى الشيت، ثم يتم تحديث لوحة معلومات الصيادلة تلقائيا.</p>
+        <div id="availabilityMessage" class="message"></div>
+      </section>
+    </section>
+
+    <section id="expiryScreen" class="screen">
+      <header class="view-head">
+        <h1 class="view-title">تواريخ الانتهاء</h1>
+        <p class="subtitle">Expiry dates</p>
+      </header>
+
+      <div id="expirySearch"></div>
+      <div id="expirySelected"></div>
+
+      <section class="save-area">
+        <h2>التواريخ الحالية</h2>
+        <div id="expiryDatesList" class="expiry-list"><div class="empty">اختر دواء لعرض تواريخ الانتهاء.</div></div>
+
+        <h2>إضافة تاريخ انتهاء</h2>
+        <div class="two-fields">
+          <div>
+            <label for="monthSelect">الشهر</label>
+            <select id="monthSelect"></select>
+          </div>
+          <div>
+            <label for="yearSelect">السنة</label>
+            <select id="yearSelect"></select>
+          </div>
+        </div>
+        <label for="expiryNote">ملاحظة / Note</label>
+        <input id="expiryNote" type="text" placeholder="اختياري">
+        <button id="saveExpiry" class="primary-btn" type="button">حفظ التغييرات<span>Save changes</span></button>
+        <p class="tiny">يمكن حفظ 6 تواريخ انتهاء نشطة كحد أقصى لكل دواء.</p>
+        <div id="expiryMessage" class="message"></div>
+      </section>
+    </section>
   </main>
 
   <div class="watermark">تم انتاج وتصميم العمل بالكامل بواسطة وعد نايف الوقداني Email: waadalwagdani@gmail.com</div>
 
   <script>
-    var medicines = [];
-    var settings = {
-      users: [],
-      statuses: ['متوفر', 'كمية محدودة', 'غير متوفر'],
-      limitedLocations: ['في الصيدلية', 'مكتب المشرف'],
-      equivalentOptions: ['نعم', 'لا', 'غير محدد'],
-      months: [],
-      years: []
-    };
-    var selectedMedicine = null;
-    var selectedLetter = '';
-
     var STATUS_AVAILABLE = 'متوفر';
     var STATUS_LIMITED = 'كمية محدودة';
     var STATUS_UNAVAILABLE = 'غير متوفر';
+    var STATUS_UNKNOWN = 'غير محدد';
 
-    var englishLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-    var arabicLetters = 'ابتثجحخدذرزسشصضطظعغفقكلمنهوي'.split('');
+    var settings = {
+      users: [],
+      months: [],
+      years: []
+    };
+    var medicines = [];
+    var activeView = 'home';
+    var selectedAvailabilityMedicine = null;
+    var selectedExpiryMedicine = null;
+    var selectedStatus = '';
+    var selectedLocation = '';
+    var selectedAlternative = '';
+
+    var englishLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+    var arabicLetters = ['أ', 'ب', 'ت', 'ث', 'ج', 'ح', 'خ', 'د', 'ذ', 'ر', 'ز', 'س', 'ش', 'ص', 'ض', 'ط', 'ظ', 'ع', 'غ', 'ف', 'ق', 'ك', 'ل', 'م', 'ن', 'ه', 'و', 'ي'];
 
     document.addEventListener('DOMContentLoaded', function () {
-      renderLetters();
-      bindEvents();
-      loadBootstrap();
+      bindNavigation();
+      bindAvailabilityControls();
+      bindExpiryControls();
+      showScreen('home');
+      loadInitialData();
     });
 
-    function bindEvents() {
-      document.getElementById('searchInput').addEventListener('input', function () {
-        selectedLetter = '';
-        clearActiveLetters();
-        renderMedicineList(filterByQuery(this.value));
+    function bindNavigation() {
+      document.getElementById('backButton').addEventListener('click', function () {
+        showScreen('home');
+      });
+      document.getElementById('homeButton').addEventListener('click', function () {
+        showScreen('home');
+      });
+      Array.prototype.forEach.call(document.querySelectorAll('[data-open-view]'), function (button) {
+        button.addEventListener('click', function () {
+          showScreen(this.getAttribute('data-open-view'));
+        });
       });
     }
 
-    function loadBootstrap() {
+    function bindAvailabilityControls() {
+      Array.prototype.forEach.call(document.querySelectorAll('[data-status]'), function (button) {
+        button.addEventListener('click', function () {
+          selectedStatus = this.getAttribute('data-status');
+          updateChoiceSelection('statusChoices', '[data-status]', selectedStatus);
+          updateConditionalControls();
+        });
+      });
+
+      Array.prototype.forEach.call(document.querySelectorAll('[data-location]'), function (button) {
+        button.addEventListener('click', function () {
+          selectedLocation = this.getAttribute('data-location');
+          updateChoiceSelection('locationChoices', '[data-location]', selectedLocation);
+        });
+      });
+
+      Array.prototype.forEach.call(document.querySelectorAll('[data-alternative]'), function (button) {
+        button.addEventListener('click', function () {
+          selectedAlternative = this.getAttribute('data-alternative');
+          updateChoiceSelection('alternativeChoices', '[data-alternative]', selectedAlternative);
+        });
+      });
+
+      document.getElementById('saveAvailability').addEventListener('click', saveAvailability);
+    }
+
+    function bindExpiryControls() {
+      document.getElementById('saveExpiry').addEventListener('click', addExpiryDate);
+    }
+
+    function loadInitialData() {
       google.script.run
         .withSuccessHandler(function (data) {
-          settings = data.settings || settings;
-          medicines = Array.isArray(data.medicines) ? data.medicines : [];
-          renderUserSelect();
-          renderMedicineList(medicines);
+          settings = data || settings;
+          renderUsers();
+          renderDateOptions();
         })
         .withFailureHandler(function (error) {
-          showMessage(error && error.message ? error.message : error, 'error');
+          showMessage('homeMessage', errorMessage(error), 'error');
         })
-        .getSupplyBootstrap();
+        .getSettings();
+
+      google.script.run
+        .withSuccessHandler(function (items) {
+          medicines = Array.isArray(items) ? items : [];
+          renderSearchBlock('availabilitySearch', 'availability');
+          renderSearchBlock('expirySearch', 'expiry');
+        })
+        .withFailureHandler(function (error) {
+          showMessage('homeMessage', errorMessage(error), 'error');
+        })
+        .getMedicines();
     }
 
-    function renderUserSelect() {
-      var select = document.getElementById('userSelect');
-      var options = ['<option value="">اختر اسم المحدث</option>'];
-
-      if (Array.isArray(settings.users) && settings.users.length) {
-        options = options.concat(settings.users.map(function (user) {
-          return '<option value="' + escapeHtml(user) + '">' + escapeHtml(user) + '</option>';
-        }));
-      }
-
-      select.innerHTML = options.join('');
-    }
-
-    function renderLetters() {
-      document.getElementById('englishLetters').innerHTML = englishLetters.map(function (letter) {
-        return '<button class="letter-btn" type="button" data-kind="en" data-letter="' + letter + '">' + letter + '</button>';
+    function renderUsers() {
+      var users = settings.users && settings.users.length ? settings.users : ['عبدالرحمن الثبيتي', 'نواف سندي', 'عبدالرحمن الغامدي', 'وعد الوقداني'];
+      document.getElementById('userSelect').innerHTML = '<option value="">اختر اسم المحدث</option>' + users.map(function (user) {
+        return '<option value="' + escapeHtml(user) + '">' + escapeHtml(user) + '</option>';
       }).join('');
+    }
 
-      document.getElementById('arabicLetters').innerHTML = arabicLetters.map(function (letter) {
-        return '<button class="letter-btn" type="button" data-kind="ar" data-letter="' + letter + '">' + letter + '</button>';
+    function renderDateOptions() {
+      var months = settings.months && settings.months.length ? settings.months : defaultMonths();
+      var years = settings.years && settings.years.length ? settings.years : defaultYears();
+
+      document.getElementById('monthSelect').innerHTML = months.map(function (month) {
+        var value = typeof month === 'object' ? month.value : month;
+        var label = typeof month === 'object' ? month.label : month;
+        return '<option value="' + escapeHtml(value) + '">' + escapeHtml(label) + '</option>';
       }).join('');
-
-      Array.prototype.forEach.call(document.querySelectorAll('.letter-btn'), function (button) {
-        button.addEventListener('click', function () {
-          selectedLetter = this.getAttribute('data-letter');
-          clearActiveLetters();
-          this.classList.add('active');
-          document.getElementById('searchInput').value = '';
-          renderMedicineList(filterByLetter(selectedLetter, this.getAttribute('data-kind')));
-        });
-      });
-    }
-
-    function filterByLetter(letter, kind) {
-      var normalizedLetter = normalizeText(letter);
-      return medicines.filter(function (medicine) {
-        var source = kind === 'ar' ? medicine.nameAr : medicine.name;
-        return normalizeText(source).startsWith(normalizedLetter);
-      });
-    }
-
-    function filterByQuery(query) {
-      var term = normalizeText(query);
-      if (!term) return medicines;
-      return medicines.filter(function (medicine) {
-        return normalizeText(medicine.name).startsWith(term) ||
-          normalizeText(medicine.nameAr).startsWith(term) ||
-          normalizeText(medicine.itemNumber).startsWith(term);
-      });
-    }
-
-    function renderMedicineList(items) {
-      var list = document.getElementById('medicineList');
-      var rows = Array.isArray(items) ? items : [];
-
-      if (!rows.length) {
-        list.innerHTML = '<div class="empty">لا توجد أدوية تبدأ بهذا النص أو الحرف.</div>';
-        return;
-      }
-
-      list.innerHTML = rows.map(function (medicine) {
-        var active = selectedMedicine && selectedMedicine.dbId === medicine.dbId ? ' active' : '';
-        return '<button class="medicine-row' + active + '" type="button" data-id="' + escapeHtml(medicine.dbId) + '">' +
-          '<strong>' + escapeHtml(medicine.name || medicine.nameAr || 'بدون اسم') + '</strong>' +
-          '<span class="tiny">' + escapeHtml(medicine.nameAr || '') + '</span>' +
-          '<span class="tiny">Item: ' + escapeHtml(medicine.itemNumber || '-') + ' · ' + escapeHtml(medicine.status || '-') + '</span>' +
-          '</button>';
+      document.getElementById('yearSelect').innerHTML = years.map(function (year) {
+        return '<option value="' + escapeHtml(year) + '">' + escapeHtml(year) + '</option>';
       }).join('');
-
-      Array.prototype.forEach.call(list.querySelectorAll('.medicine-row'), function (button) {
-        button.addEventListener('click', function () {
-          var id = this.getAttribute('data-id');
-          selectedMedicine = medicines.filter(function (medicine) {
-            return medicine.dbId === id;
-          })[0] || null;
-          renderSelectedMedicine();
-          renderMedicineList(rows);
-        });
-      });
     }
 
-    function renderSelectedMedicine() {
-      var container = document.getElementById('selectedMedicine');
-      if (!selectedMedicine) {
-        container.innerHTML = '<div class="empty">اختر دواء من القائمة لعرض نموذج التحديث.</div>';
-        return;
-      }
-
+    function renderSearchBlock(containerId, mode) {
+      var container = document.getElementById(containerId);
       container.innerHTML =
-        '<div class="selected-head">' +
-          '<div>' +
-            '<h2>' + escapeHtml(selectedMedicine.name || selectedMedicine.nameAr) + '</h2>' +
-            '<div class="tiny">' + escapeHtml(selectedMedicine.nameAr || '') + '</div>' +
-            '<div class="tiny">Item: ' + escapeHtml(selectedMedicine.itemNumber || '-') + '</div>' +
-          '</div>' +
-          '<span class="chip ' + statusClassName(selectedMedicine.status) + '">' + escapeHtml(selectedMedicine.status || STATUS_AVAILABLE) + '</span>' +
-        '</div>' +
-        '<div class="form-grid">' +
-          '<div class="field">' +
-            '<label for="statusSelect">حالة التوفر</label>' +
-            '<select id="statusSelect">' + buildOptionHtml(settings.statuses, selectedMedicine.status || STATUS_AVAILABLE) + '</select>' +
-          '</div>' +
-          '<div id="limitedLocationField" class="field conditional">' +
-            '<label for="locationSelect">مكان توفر الكمية المحدودة</label>' +
-            '<select id="locationSelect">' + buildOptionHtml(settings.limitedLocations, selectedMedicine.limitedLocation || '') + '</select>' +
-          '</div>' +
-          '<div id="equivalentField" class="field conditional">' +
-            '<label for="equivalentSelect">هل للصنف بديل مكافئ؟</label>' +
-            '<select id="equivalentSelect">' + buildOptionHtml(settings.equivalentOptions, selectedMedicine.equivalentAlternative || 'غير محدد') + '</select>' +
-          '</div>' +
-          '<div class="field">' +
-            '<label for="noteInput">ملاحظة التموين</label>' +
-            '<textarea id="noteInput" placeholder="اختياري">' + escapeHtml(selectedMedicine.supplyNote || '') + '</textarea>' +
-          '</div>' +
-          '<button id="saveButton" class="primary-btn" type="button">حفظ تحديث التوفر</button>' +
-        '</div>' +
-        '<div id="selectedMessage" class="message"></div>' +
-        '<section class="form-grid">' +
-          '<h3>تواريخ الانتهاء</h3>' +
-          '<div id="expiryList" class="expiry-list"><div class="empty">جاري تحميل تواريخ الانتهاء...</div></div>' +
-          '<div class="two-col">' +
-            '<div class="field"><label for="monthSelect">شهر الانتهاء</label><select id="monthSelect">' + buildMonthHtml() + '</select></div>' +
-            '<div class="field"><label for="yearSelect">سنة الانتهاء</label><select id="yearSelect">' + buildYearHtml() + '</select></div>' +
-          '</div>' +
-          '<div class="field"><label for="expiryNote">ملاحظة تاريخ الانتهاء</label><input id="expiryNote" type="text" placeholder="اختياري"></div>' +
-          '<button id="addExpiryButton" class="ghost-btn" type="button">إضافة تاريخ انتهاء</button>' +
+        '<section class="search-card">' +
+          '<div class="search-wrap"><span class="search-icon">⌕</span><input class="search-input" id="' + mode + 'SearchInput" type="search" autocomplete="off" placeholder="ابحث عن الدواء / Search medication"></div>' +
+          '<div class="letter-strip" id="' + mode + 'ArabicLetters"></div>' +
+          '<div class="letter-strip" id="' + mode + 'EnglishLetters"></div>' +
+          '<div class="dropdown-list" id="' + mode + 'Dropdown"></div>' +
         '</section>';
 
-      document.getElementById('statusSelect').addEventListener('change', updateConditionalFields);
-      document.getElementById('saveButton').addEventListener('click', saveAvailability);
-      document.getElementById('addExpiryButton').addEventListener('click', addExpiry);
-      updateConditionalFields();
-      loadExpiryDates();
+      document.getElementById(mode + 'SearchInput').addEventListener('input', function () {
+        clearLetters(mode);
+        openMedicineDropdown(mode, filterMedicinesByQuery(this.value), this.value ? 'لا توجد أدوية تبدأ بهذا النص.' : 'اختر دواء من القائمة.');
+      });
+
+      renderLetters(mode, 'ArabicLetters', arabicLetters, 'arabic');
+      renderLetters(mode, 'EnglishLetters', englishLetters, 'english');
     }
 
-    function updateConditionalFields() {
-      var status = document.getElementById('statusSelect').value;
-      toggleOpen('limitedLocationField', status === STATUS_LIMITED);
-      toggleOpen('equivalentField', status === STATUS_UNAVAILABLE);
+    function renderLetters(mode, suffix, letters, kind) {
+      var holder = document.getElementById(mode + suffix);
+      holder.innerHTML = letters.map(function (letter) {
+        return '<button class="letter-btn" type="button" data-mode="' + mode + '" data-kind="' + kind + '" data-letter="' + letter + '">' + letter + '</button>';
+      }).join('');
+      Array.prototype.forEach.call(holder.querySelectorAll('.letter-btn'), function (button) {
+        button.addEventListener('click', function () {
+          var letter = this.getAttribute('data-letter');
+          var letterKind = this.getAttribute('data-kind');
+          clearLetters(mode);
+          this.classList.add('active');
+          document.getElementById(mode + 'SearchInput').value = '';
+          openMedicineDropdown(mode, filterMedicinesByLetter(letter, letterKind), 'لا توجد أدوية تبدأ بهذا الحرف.');
+        });
+      });
+    }
+
+    function filterMedicinesByQuery(query) {
+      var term = normalizeText(query);
+      if (!term) return medicines;
+      var arabic = isArabicText(query);
+      return medicines.filter(function (medicine) {
+        var source = arabic ? medicine.nameAr : medicine.name;
+        return normalizeText(source).startsWith(term);
+      });
+    }
+
+    function filterMedicinesByLetter(letter, kind) {
+      var term = normalizeText(letter);
+      return medicines.filter(function (medicine) {
+        var source = kind === 'arabic' ? medicine.nameAr : medicine.name;
+        return normalizeText(source).startsWith(term);
+      });
+    }
+
+    function openMedicineDropdown(mode, results, emptyText) {
+      var dropdown = document.getElementById(mode + 'Dropdown');
+      dropdown.classList.add('open');
+      if (!results.length) {
+        dropdown.innerHTML = '<div class="empty">' + escapeHtml(emptyText) + '</div>';
+        return;
+      }
+
+      dropdown.innerHTML = results.map(function (medicine) {
+        return '<button class="dropdown-item" type="button" data-mode="' + mode + '" data-id="' + escapeHtml(medicine.dbId) + '">' +
+          '<strong>' + escapeHtml(medicine.name || medicine.nameAr || 'بدون اسم') + '</strong>' +
+          '<span class="tiny">' + escapeHtml(medicine.nameAr || medicine.dosageForm || '') + '</span>' +
+        '</button>';
+      }).join('');
+
+      Array.prototype.forEach.call(dropdown.querySelectorAll('.dropdown-item'), function (button) {
+        button.addEventListener('click', function () {
+          selectMedicine(mode, this.getAttribute('data-id'));
+        });
+      });
+    }
+
+    function selectMedicine(mode, dbId) {
+      var medicine = medicines.filter(function (item) {
+        return item.dbId === dbId;
+      })[0];
+      if (!medicine) return;
+
+      if (mode === 'availability') {
+        selectedAvailabilityMedicine = medicine;
+        selectedStatus = [STATUS_AVAILABLE, STATUS_LIMITED, STATUS_UNAVAILABLE].indexOf(medicine.status) !== -1 ? medicine.status : '';
+        selectedLocation = medicine.limitedLocation || '';
+        selectedAlternative = medicine.hasAlternative || '';
+        document.getElementById('availabilityNote').value = medicine.note || '';
+        renderSelectedMedicine('availabilitySelected', medicine);
+        updateChoiceSelection('statusChoices', '[data-status]', selectedStatus);
+        updateChoiceSelection('locationChoices', '[data-location]', selectedLocation);
+        updateChoiceSelection('alternativeChoices', '[data-alternative]', selectedAlternative);
+        updateConditionalControls();
+      } else {
+        selectedExpiryMedicine = medicine;
+        renderSelectedMedicine('expirySelected', medicine);
+        loadExpiryDates();
+      }
+
+      closeDropdown(mode);
+    }
+
+    function renderSelectedMedicine(containerId, medicine) {
+      document.getElementById(containerId).innerHTML =
+        '<article class="medicine-card">' +
+          '<span class="pill-icon">Rx</span>' +
+          '<div><h2>' + escapeHtml(medicine.name || medicine.nameAr || 'بدون اسم') + '</h2>' +
+          '<div class="tiny">' + escapeHtml(medicine.nameAr || '') + '</div>' +
+          '<div class="tiny">Item: ' + escapeHtml(medicine.itemNumber || '-') + '</div></div>' +
+        '</article>';
+    }
+
+    function updateConditionalControls() {
+      toggleOpen('limitedLocationGroup', selectedStatus === STATUS_LIMITED);
+      toggleOpen('alternativeGroup', selectedStatus === STATUS_UNAVAILABLE);
     }
 
     function saveAvailability() {
-      if (!selectedMedicine) return;
       var user = currentUser();
-      var status = document.getElementById('statusSelect').value;
-      var payload = {
-        dbId: selectedMedicine.dbId,
-        itemNumber: selectedMedicine.itemNumber,
-        status: status,
-        location: status === STATUS_LIMITED ? document.getElementById('locationSelect').value : '',
-        equivalentAlternative: status === STATUS_UNAVAILABLE ? document.getElementById('equivalentSelect').value : '',
-        note: document.getElementById('noteInput').value,
-        user: user
-      };
+      if (!user) return showMessage('availabilityMessage', 'يجب اختيار اسم المحدث من الصفحة الرئيسية.', 'error');
+      if (!selectedAvailabilityMedicine) return showMessage('availabilityMessage', 'يجب اختيار الدواء قبل الحفظ.', 'error');
+      if (!selectedStatus) return showMessage('availabilityMessage', 'يجب اختيار حالة التوفر.', 'error');
+      if (selectedStatus === STATUS_LIMITED && !selectedLocation) return showMessage('availabilityMessage', 'يجب اختيار مكان توفر الكمية المحدودة.', 'error');
+      if (selectedStatus === STATUS_UNAVAILABLE && !selectedAlternative) return showMessage('availabilityMessage', 'يجب تحديد هل للصنف بديل مكافئ.', 'error');
 
-      if (!user) {
-        showSelectedMessage('يجب اختيار اسم المحدث قبل الحفظ.', 'error');
-        return;
-      }
-      if (status === STATUS_LIMITED && !payload.location) {
-        showSelectedMessage('يجب اختيار مكان توفر الكمية المحدودة.', 'error');
-        return;
-      }
-      if (status === STATUS_UNAVAILABLE && !payload.equivalentAlternative) {
-        showSelectedMessage('يجب تحديد هل للصنف بديل مكافئ.', 'error');
-        return;
-      }
-
-      setSaving(true);
+      setButtonBusy('saveAvailability', true);
       google.script.run
         .withSuccessHandler(function (result) {
-          setSaving(false);
-          showSelectedMessage(result.message || 'تم حفظ التحديث.', 'success');
-          if (result.medicine) {
-            replaceMedicine(result.medicine);
-            selectedMedicine = result.medicine;
-            renderSelectedMedicine();
-            renderMedicineList(filterAfterSave());
-          }
+          setButtonBusy('saveAvailability', false);
+          showMessage('availabilityMessage', result.message || 'تم حفظ التغييرات.', 'success');
+          if (result.medicine) replaceMedicine(result.medicine);
+          selectedAvailabilityMedicine = result.medicine || selectedAvailabilityMedicine;
+          if (selectedAvailabilityMedicine) renderSelectedMedicine('availabilitySelected', selectedAvailabilityMedicine);
         })
         .withFailureHandler(function (error) {
-          setSaving(false);
-          showSelectedMessage(error && error.message ? error.message : error, 'error');
+          setButtonBusy('saveAvailability', false);
+          showMessage('availabilityMessage', errorMessage(error), 'error');
         })
-        .updateAvailability(payload);
+        .updateAvailability({
+          dbId: selectedAvailabilityMedicine.dbId,
+          status: selectedStatus,
+          limitedLocation: selectedStatus === STATUS_LIMITED ? selectedLocation : '',
+          hasAlternative: selectedStatus === STATUS_UNAVAILABLE ? selectedAlternative : '',
+          note: document.getElementById('availabilityNote').value,
+          user: user
+        });
     }
 
     function loadExpiryDates() {
-      if (!selectedMedicine) return;
+      if (!selectedExpiryMedicine) return;
+      document.getElementById('expiryDatesList').innerHTML = '<div class="empty">جاري تحميل تواريخ الانتهاء...</div>';
       google.script.run
         .withSuccessHandler(renderExpiryDates)
         .withFailureHandler(function (error) {
-          document.getElementById('expiryList').innerHTML = '<div class="empty">' + escapeHtml(error && error.message ? error.message : error) + '</div>';
+          document.getElementById('expiryDatesList').innerHTML = '<div class="empty">' + escapeHtml(errorMessage(error)) + '</div>';
         })
-        .getExpiryDates(selectedMedicine.dbId);
+        .getExpiryDates(selectedExpiryMedicine.dbId);
     }
 
     function renderExpiryDates(items) {
-      var list = document.getElementById('expiryList');
       var dates = Array.isArray(items) ? items : [];
-
       if (!dates.length) {
-        list.innerHTML = '<div class="empty">لا توجد تواريخ انتهاء نشطة لهذا الدواء.</div>';
+        document.getElementById('expiryDatesList').innerHTML = '<div class="empty">لا توجد تواريخ انتهاء نشطة لهذا الدواء.</div>';
         return;
       }
 
-      list.innerHTML = dates.map(function (item) {
+      document.getElementById('expiryDatesList').innerHTML = dates.map(function (item) {
         return '<div class="expiry-row">' +
-          '<div>' +
-            '<strong>' + escapeHtml(item.sortDate || '-') + '</strong>' +
-            '<div class="tiny">شهر ' + escapeHtml(String(item.month || '-')) + ' · سنة ' + escapeHtml(String(item.year || '-')) + '</div>' +
-            '<div class="tiny">' + escapeHtml(item.note || '') + '</div>' +
-          '</div>' +
-          '<button class="danger-btn" type="button" data-delete-id="' + escapeHtml(item.expiryId) + '">حذف</button>' +
+          '<div><strong>' + escapeHtml(formatMonthYear(item.month, item.year)) + '</strong><div class="tiny">' + escapeHtml(item.sortDate || '') + '</div></div>' +
+          '<button class="danger-btn" type="button" data-expiry-id="' + escapeHtml(item.expiryId) + '">حذف</button>' +
         '</div>';
       }).join('');
 
-      Array.prototype.forEach.call(list.querySelectorAll('[data-delete-id]'), function (button) {
+      Array.prototype.forEach.call(document.querySelectorAll('[data-expiry-id]'), function (button) {
         button.addEventListener('click', function () {
-          deleteExpiry(this.getAttribute('data-delete-id'));
+          deleteExpiryDate(this.getAttribute('data-expiry-id'));
         });
       });
     }
 
-    function addExpiry() {
-      if (!selectedMedicine) return;
+    function addExpiryDate() {
       var user = currentUser();
-      if (!user) {
-        showSelectedMessage('يجب اختيار اسم المحدث قبل إضافة تاريخ الانتهاء.', 'error');
-        return;
-      }
+      if (!user) return showMessage('expiryMessage', 'يجب اختيار اسم المحدث من الصفحة الرئيسية.', 'error');
+      if (!selectedExpiryMedicine) return showMessage('expiryMessage', 'يجب اختيار الدواء قبل حفظ تاريخ الانتهاء.', 'error');
 
-      var payload = {
-        dbId: selectedMedicine.dbId,
-        itemNumber: selectedMedicine.itemNumber,
-        month: document.getElementById('monthSelect').value,
-        year: document.getElementById('yearSelect').value,
-        note: document.getElementById('expiryNote').value,
-        user: user
-      };
-
+      setButtonBusy('saveExpiry', true);
       google.script.run
         .withSuccessHandler(function (result) {
-          showSelectedMessage(result.message || 'تمت إضافة تاريخ الانتهاء.', 'success');
+          setButtonBusy('saveExpiry', false);
+          showMessage('expiryMessage', result.message || 'تم حفظ تاريخ الانتهاء.', 'success');
           renderExpiryDates(result.expiryDates || []);
           document.getElementById('expiryNote').value = '';
         })
         .withFailureHandler(function (error) {
-          showSelectedMessage(error && error.message ? error.message : error, 'error');
+          setButtonBusy('saveExpiry', false);
+          showMessage('expiryMessage', errorMessage(error), 'error');
         })
-        .addExpiryDate(payload);
+        .addExpiryDate({
+          dbId: selectedExpiryMedicine.dbId,
+          month: document.getElementById('monthSelect').value,
+          year: document.getElementById('yearSelect').value,
+          note: document.getElementById('expiryNote').value,
+          user: user
+        });
     }
 
-    function deleteExpiry(expiryId) {
+    function deleteExpiryDate(expiryId) {
       var user = currentUser();
-      if (!user) {
-        showSelectedMessage('يجب اختيار اسم المحدث قبل حذف تاريخ الانتهاء.', 'error');
-        return;
-      }
+      if (!user) return showMessage('expiryMessage', 'يجب اختيار اسم المحدث قبل الحذف.', 'error');
 
       google.script.run
         .withSuccessHandler(function (result) {
-          showSelectedMessage(result.message || 'تم حذف تاريخ الانتهاء.', 'success');
+          showMessage('expiryMessage', result.message || 'تم حذف تاريخ الانتهاء.', 'success');
           renderExpiryDates(result.expiryDates || []);
         })
         .withFailureHandler(function (error) {
-          showSelectedMessage(error && error.message ? error.message : error, 'error');
+          showMessage('expiryMessage', errorMessage(error), 'error');
         })
         .deleteExpiryDate({ expiryId: expiryId, user: user });
+    }
+
+    function showScreen(name) {
+      activeView = name;
+      Array.prototype.forEach.call(document.querySelectorAll('.screen'), function (screen) {
+        screen.classList.remove('active');
+      });
+      document.getElementById(name + 'Screen').classList.add('active');
+      document.getElementById('backButton').style.visibility = name === 'home' ? 'hidden' : 'visible';
+    }
+
+    function updateChoiceSelection(containerId, selector, value) {
+      var container = document.getElementById(containerId);
+      if (!container) return;
+      container.classList.toggle('has-selection', Boolean(value));
+      Array.prototype.forEach.call(container.querySelectorAll(selector), function (button) {
+        var selected = button.getAttribute(selector.replace(/[\[\]]/g, '').split('=')[0]) === value;
+        button.classList.toggle('selected', selected);
+      });
     }
 
     function replaceMedicine(updated) {
@@ -770,89 +1071,52 @@
       });
     }
 
-    function filterAfterSave() {
-      var query = document.getElementById('searchInput').value;
-      if (query) return filterByQuery(query);
-      if (selectedLetter) {
-        var active = document.querySelector('.letter-btn.active');
-        return filterByLetter(selectedLetter, active ? active.getAttribute('data-kind') : 'en');
-      }
-      return medicines;
+    function clearLetters(mode) {
+      Array.prototype.forEach.call(document.querySelectorAll('[data-mode="' + mode + '"].letter-btn'), function (button) {
+        button.classList.remove('active');
+      });
     }
 
-    function buildOptionHtml(values, selected) {
-      var list = Array.isArray(values) ? values : [];
-      var html = '<option value="">اختر</option>';
-      html += list.map(function (value) {
-        var selectedAttr = String(value) === String(selected) ? ' selected' : '';
-        return '<option value="' + escapeHtml(value) + '"' + selectedAttr + '>' + escapeHtml(value) + '</option>';
-      }).join('');
-      return html;
-    }
-
-    function buildMonthHtml() {
-      var months = Array.isArray(settings.months) ? settings.months : [];
-      if (!months.length) {
-        months = '1,2,3,4,5,6,7,8,9,10,11,12'.split(',').map(function (value) {
-          return { value: value, label: value };
-        });
-      }
-      return months.map(function (month) {
-        return '<option value="' + escapeHtml(month.value) + '">' + escapeHtml(month.label) + '</option>';
-      }).join('');
-    }
-
-    function buildYearHtml() {
-      var years = Array.isArray(settings.years) ? settings.years : [];
-      return years.map(function (year) {
-        return '<option value="' + escapeHtml(year) + '">' + escapeHtml(year) + '</option>';
-      }).join('');
+    function closeDropdown(mode) {
+      var dropdown = document.getElementById(mode + 'Dropdown');
+      dropdown.classList.remove('open');
+      dropdown.innerHTML = '';
     }
 
     function currentUser() {
       return document.getElementById('userSelect').value;
     }
 
-    function setSaving(isSaving) {
-      var button = document.getElementById('saveButton');
-      if (!button) return;
-      button.disabled = isSaving;
-      button.textContent = isSaving ? 'جاري الحفظ...' : 'حفظ تحديث التوفر';
+    function toggleOpen(id, open) {
+      document.getElementById(id).classList.toggle('open', open);
     }
 
-    function showSelectedMessage(text, type) {
-      var box = document.getElementById('selectedMessage');
-      if (!box) {
-        showMessage(text, type);
-        return;
-      }
+    function showMessage(id, text, type) {
+      var box = document.getElementById(id);
       box.className = 'message open ' + type;
       box.textContent = text;
     }
 
-    function showMessage(text, type) {
-      var box = document.getElementById('globalMessage');
-      box.className = 'message open ' + type;
-      box.textContent = text;
+    function setButtonBusy(id, busy) {
+      var button = document.getElementById(id);
+      button.disabled = busy;
     }
 
-    function toggleOpen(id, isOpen) {
-      var element = document.getElementById(id);
-      if (!element) return;
-      if (isOpen) element.classList.add('open');
-      else element.classList.remove('open');
-    }
-
-    function clearActiveLetters() {
-      Array.prototype.forEach.call(document.querySelectorAll('.letter-btn.active'), function (button) {
-        button.classList.remove('active');
+    function defaultMonths() {
+      return ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'].map(function (month) {
+        return { value: month, label: month };
       });
     }
 
-    function statusClassName(status) {
-      if (status === STATUS_LIMITED) return 'limited';
-      if (status === STATUS_UNAVAILABLE) return 'unavailable';
-      return 'available';
+    function defaultYears() {
+      var current = new Date().getFullYear();
+      var years = [];
+      for (var i = 0; i <= 7; i += 1) years.push(String(current + i));
+      return years;
+    }
+
+    function formatMonthYear(month, year) {
+      return String(month || '--').padStart(2, '0') + ' / ' + String(year || '----');
     }
 
     function normalizeText(value) {
@@ -863,6 +1127,14 @@
         .replace(/[ى]/g, 'ي')
         .replace(/[ة]/g, 'ه')
         .replace(/[ًٌٍَُِّْـ]/g, '');
+    }
+
+    function isArabicText(value) {
+      return /[\u0600-\u06FF]/.test(String(value || ''));
+    }
+
+    function errorMessage(error) {
+      return error && error.message ? error.message : String(error || 'حدث خطأ غير متوقع.');
     }
 
     function escapeHtml(value) {
