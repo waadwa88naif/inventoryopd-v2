@@ -4,29 +4,39 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <base target="_top">
-  <title>Inventory OPD Pharmacist Dashboard</title>
+  <title>inventoryopd | Medication Availability Dashboard</title>
   <style>
     :root {
-      --bg: #f5f8fb;
+      --canvas: #f7f9fc;
       --panel: #ffffff;
-      --line: #dbe6ef;
-      --ink: #183044;
-      --muted: #6c7e8e;
-      --teal: #0f8c80;
-      --teal-soft: #e4f5f2;
-      --green: #138a53;
-      --green-soft: #e6f6ee;
-      --amber: #b7791f;
-      --amber-soft: #fff4df;
-      --red: #bd2f3a;
-      --red-soft: #fde9eb;
-      --blue: #2563a8;
-      --blue-soft: #e8f1fb;
-      --shadow: 0 18px 45px rgba(24, 48, 68, .08);
+      --panel-soft: #fbfcff;
+      --line: #dfe7f1;
+      --line-strong: #cbd8e8;
+      --ink: #081a3d;
+      --ink-2: #17345d;
+      --muted: #60708d;
+      --blue: #0b63ce;
+      --blue-2: #0a4fa8;
+      --blue-soft: #eaf2ff;
+      --green: #0c8b4b;
+      --green-soft: #e9f7ef;
+      --amber: #d97706;
+      --amber-soft: #fff4e5;
+      --red: #df1f37;
+      --red-soft: #fff0f2;
+      --gray: #64748b;
+      --gray-soft: #f1f5f9;
+      --shadow: 0 22px 55px rgba(8, 26, 61, .08);
+      --radius: 18px;
     }
 
     * {
       box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+      background: var(--canvas);
     }
 
     body {
@@ -35,8 +45,8 @@
       color: var(--ink);
       font-family: Arial, "Tahoma", sans-serif;
       background:
-        linear-gradient(180deg, rgba(228, 245, 242, .65), rgba(245, 248, 251, 0) 340px),
-        var(--bg);
+        radial-gradient(circle at top left, rgba(11, 99, 206, .08), transparent 36vw),
+        linear-gradient(180deg, #ffffff 0%, var(--canvas) 48%, #f4f7fb 100%);
     }
 
     button,
@@ -48,155 +58,368 @@
       cursor: pointer;
     }
 
-    .app {
-      width: min(1440px, calc(100% - 40px));
-      margin: 0 auto;
-      padding: 28px 0 72px;
-    }
-
-    .topbar {
+    .shell {
+      direction: ltr;
       display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 24px;
-      align-items: end;
-      margin-bottom: 22px;
+      grid-template-columns: 300px minmax(0, 1fr);
+      min-height: 100vh;
     }
 
-    .eyebrow {
+    .sidebar {
+      direction: rtl;
+      position: sticky;
+      top: 0;
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      gap: 26px;
+      min-height: 100vh;
+      padding: 34px 18px 54px;
+      border-right: 1px solid var(--line);
+      background: rgba(255, 255, 255, .76);
+      backdrop-filter: blur(20px);
+    }
+
+    .brand {
+      padding: 0 12px;
+    }
+
+    .brand-mark {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 42px;
+      height: 42px;
+      margin-bottom: 14px;
+      border: 1px solid #cbdcff;
+      border-radius: 12px;
+      background: #eef5ff;
+      color: var(--blue);
+      font-weight: 900;
+    }
+
+    .brand h1 {
       margin: 0 0 8px;
-      color: var(--teal);
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: 0;
+      font-size: 22px;
+      line-height: 1.35;
     }
 
-    h1,
-    h2,
-    h3,
-    p {
-      margin-top: 0;
-    }
-
-    h1 {
-      margin-bottom: 8px;
-      font-size: 34px;
-      line-height: 1.25;
-    }
-
-    .subtitle {
-      margin-bottom: 0;
+    .brand p,
+    .muted {
+      margin: 0;
       color: var(--muted);
-      font-size: 15px;
-      line-height: 1.7;
+      line-height: 1.65;
     }
 
-    .refresh-pill {
-      min-width: 240px;
-      padding: 12px 16px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: rgba(255, 255, 255, .78);
-      color: var(--muted);
-      box-shadow: var(--shadow);
+    .nav {
+      display: grid;
+      gap: 12px;
+    }
+
+    .nav-button {
+      display: grid;
+      grid-template-columns: 44px 1fr;
+      gap: 12px;
+      align-items: center;
+      width: 100%;
+      min-height: 74px;
+      border: 1px solid transparent;
+      border-radius: 14px;
+      background: transparent;
+      color: var(--ink);
+      padding: 12px;
       text-align: right;
     }
 
-    .refresh-pill strong {
-      display: block;
-      margin-bottom: 4px;
-      color: var(--ink);
-      font-size: 14px;
+    .nav-button.active,
+    .nav-button:hover {
+      border-color: var(--line);
+      background: var(--panel);
+      box-shadow: 0 14px 35px rgba(8, 26, 61, .06);
     }
 
-    .toolbar {
+    .nav-icon {
       display: grid;
-      grid-template-columns: minmax(320px, 520px) 1fr;
-      gap: 18px;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      border: 1px solid #d6e2f3;
+      color: var(--blue-2);
+      background: #f8fbff;
+      font-size: 21px;
+      font-weight: 800;
+    }
+
+    .nav-title {
+      display: block;
+      font-weight: 900;
+      line-height: 1.35;
+    }
+
+    .nav-sub {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .time-card {
+      margin: 0 8px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+
+    .clock {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--ink-2);
+      font-size: 27px;
+      font-weight: 900;
+      direction: ltr;
+    }
+
+    .main {
+      direction: rtl;
+      min-width: 0;
+      padding: 30px 32px 70px;
+    }
+
+    .main-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 22px;
       align-items: start;
       margin-bottom: 18px;
     }
 
-    .search-box,
-    .letter-box,
-    .section,
-    .card {
+    .kicker {
+      margin: 0 0 6px;
+      color: var(--blue);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .title {
+      margin: 0;
+      font-size: clamp(30px, 3vw, 44px);
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.7;
+    }
+
+    .date-pill {
+      display: grid;
+      grid-template-columns: 44px 1fr;
+      gap: 12px;
+      min-width: 240px;
+      padding: 14px;
       border: 1px solid var(--line);
-      border-radius: 8px;
+      border-radius: 16px;
       background: var(--panel);
+      box-shadow: 0 12px 30px rgba(8, 26, 61, .06);
+      text-align: right;
+    }
+
+    .date-icon {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: var(--blue-soft);
+      color: var(--blue);
+      font-weight: 900;
+    }
+
+    .date-pill strong {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--ink-2);
+      font-size: 14px;
+    }
+
+    .date-pill span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: minmax(520px, 1.15fr) minmax(420px, .85fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, .88);
       box-shadow: var(--shadow);
     }
 
-    .search-box {
-      display: grid;
-      gap: 10px;
-      padding: 14px;
+    .panel-pad {
+      padding: 18px;
     }
 
-    .search-label,
-    .mini-label {
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: start;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      margin: 0 0 3px;
+      font-size: 20px;
+      line-height: 1.3;
+    }
+
+    .section-subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .metric-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .metric {
+      min-height: 78px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--panel-soft);
+      padding: 12px;
+    }
+
+    .metric strong {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .metric span {
       color: var(--muted);
       font-size: 12px;
-      font-weight: 700;
+      font-weight: 800;
+    }
+
+    .search-card {
+      display: grid;
+      gap: 14px;
+    }
+
+    .search-input-wrap {
+      position: relative;
     }
 
     .search-input {
       width: 100%;
-      height: 48px;
-      border: 1px solid #cbd9e5;
-      border-radius: 8px;
-      padding: 0 14px;
-      background: #fbfdff;
+      height: 58px;
+      border: 1px solid var(--line-strong);
+      border-radius: 16px;
+      background: #ffffff;
       color: var(--ink);
+      padding: 0 48px 0 44px;
       outline: none;
+      font-size: 17px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
     }
 
     .search-input:focus {
-      border-color: var(--teal);
-      box-shadow: 0 0 0 3px rgba(15, 140, 128, .12);
+      border-color: #8fb8ff;
+      box-shadow: 0 0 0 4px rgba(11, 99, 206, .11);
     }
 
-    .letter-box {
-      padding: 14px;
+    .search-symbol,
+    .clear-search {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
     }
 
-    .letter-group {
+    .search-symbol {
+      right: 17px;
+      font-size: 24px;
+    }
+
+    .clear-search {
+      left: 14px;
+      width: 30px;
+      height: 30px;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      font-size: 22px;
+    }
+
+    .clear-search:hover {
+      background: var(--gray-soft);
+      color: var(--ink);
+    }
+
+    .letters {
+      display: grid;
+      gap: 8px;
+    }
+
+    .letter-line {
       display: flex;
       flex-wrap: wrap;
-      gap: 7px;
-      margin-top: 10px;
+      gap: 6px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid #edf2f7;
     }
 
-    .letter-btn,
-    .ghost-btn {
-      min-width: 34px;
-      height: 34px;
-      border: 1px solid #cbd9e5;
-      border-radius: 8px;
-      background: #fbfdff;
-      color: var(--ink);
+    .letter-btn {
+      min-width: 31px;
+      height: 31px;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      background: #ffffff;
+      color: var(--ink-2);
       font-size: 13px;
-      font-weight: 700;
+      font-weight: 900;
+      box-shadow: 0 1px 0 rgba(8, 26, 61, .06);
     }
 
-    .letter-btn.active,
-    .ghost-btn:hover,
-    .letter-btn:hover {
-      border-color: var(--teal);
-      background: var(--teal-soft);
-      color: #075f58;
+    .letter-btn:hover,
+    .letter-btn.active {
+      border-color: #9cc2ff;
+      background: var(--blue-soft);
+      color: var(--blue);
     }
 
-    .letter-results {
+    .letter-dropdown {
       display: none;
-      margin-top: 12px;
-      max-height: 220px;
+      width: min(520px, 100%);
+      max-height: 250px;
       overflow: auto;
       border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #fbfdff;
+      border-radius: 16px;
+      background: #ffffff;
+      box-shadow: 0 18px 45px rgba(8, 26, 61, .13);
     }
 
-    .letter-results.open {
+    .letter-dropdown.open {
       display: block;
     }
 
@@ -204,137 +427,106 @@
       display: grid;
       width: 100%;
       gap: 3px;
-      padding: 10px 12px;
+      padding: 12px 16px;
       border: 0;
-      border-bottom: 1px solid #e8eff5;
+      border-bottom: 1px solid #eef3f8;
       background: transparent;
       color: var(--ink);
       text-align: right;
     }
 
-    .letter-item:last-child {
-      border-bottom: 0;
-    }
-
     .letter-item:hover {
-      background: var(--blue-soft);
+      background: #f3f7ff;
     }
 
-    .layout {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 430px;
-      gap: 18px;
-      align-items: start;
-    }
-
-    .section {
-      padding: 16px;
-    }
-
-    .section-head {
+    .hint {
       display: flex;
-      justify-content: space-between;
-      gap: 16px;
+      gap: 8px;
       align-items: center;
-      margin-bottom: 14px;
-    }
-
-    .section-title {
-      margin: 0;
-      font-size: 18px;
-      line-height: 1.4;
-    }
-
-    .count {
-      min-width: 72px;
-      padding: 7px 10px;
-      border-radius: 999px;
-      background: var(--blue-soft);
-      color: var(--blue);
-      font-size: 12px;
-      font-weight: 700;
-      text-align: center;
-    }
-
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 10px;
-      margin-bottom: 14px;
-    }
-
-    .stat {
-      min-height: 82px;
-      padding: 12px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #fbfdff;
-    }
-
-    .stat strong {
-      display: block;
-      margin-bottom: 6px;
-      font-size: 24px;
-    }
-
-    .stat span {
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 700;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(275px, 1fr));
-      gap: 12px;
-    }
-
-    .card {
-      display: grid;
-      min-height: 210px;
-      padding: 15px;
-      gap: 12px;
-      box-shadow: none;
-    }
-
-    .card-top {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 10px;
-      align-items: start;
-    }
-
-    .med-name {
-      margin: 0 0 5px;
-      font-size: 16px;
-      line-height: 1.45;
-    }
-
-    .med-ar {
-      margin: 0;
       color: var(--muted);
       font-size: 13px;
       line-height: 1.6;
     }
 
-    .meta {
+    .hint-mark {
+      display: inline-grid;
+      place-items: center;
+      flex: 0 0 auto;
+      width: 22px;
+      height: 22px;
+      border: 1px solid #bdd0eb;
+      border-radius: 50%;
+      color: var(--blue);
+      font-weight: 900;
+    }
+
+    .result-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin: 6px 0 10px;
+    }
+
+    .result-count {
+      color: var(--ink-2);
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .medicine-list {
+      display: grid;
+      gap: 10px;
+      max-height: 670px;
+      overflow: auto;
+      padding-left: 4px;
+    }
+
+    .medicine-card {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #ffffff;
+      padding: 14px;
+      box-shadow: 0 10px 28px rgba(8, 26, 61, .04);
+    }
+
+    .medicine-top {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .medicine-name {
+      margin: 0 0 4px;
+      font-size: 17px;
+      line-height: 1.45;
+      color: var(--ink);
+    }
+
+    .medicine-meta {
       display: flex;
       flex-wrap: wrap;
-      gap: 7px;
+      gap: 8px;
+      margin-top: 8px;
       color: var(--muted);
       font-size: 12px;
+      line-height: 1.5;
     }
 
     .chip {
       display: inline-flex;
+      min-height: 32px;
       align-items: center;
       justify-content: center;
-      min-height: 28px;
-      padding: 5px 10px;
-      border-radius: 999px;
+      gap: 5px;
+      border-radius: 11px;
+      padding: 5px 12px;
       font-size: 12px;
-      font-weight: 800;
+      font-weight: 900;
       white-space: nowrap;
+      text-align: center;
+      line-height: 1.25;
     }
 
     .chip.available {
@@ -352,104 +544,281 @@
       color: var(--red);
     }
 
-    .detail-box {
+    .chip.unknown {
+      background: var(--gray-soft);
+      color: var(--gray);
+    }
+
+    .details-panel {
       display: grid;
-      gap: 6px;
-      padding: 10px;
-      border-radius: 8px;
-      background: #f7fafc;
-      color: var(--ink);
+      gap: 10px;
+      margin-top: 12px;
+      border-radius: 14px;
+      padding: 12px;
+      background: #f8fbff;
+    }
+
+    .details-panel summary {
+      cursor: pointer;
+      color: var(--ink-2);
       font-size: 13px;
-      line-height: 1.7;
+      font-weight: 900;
+      line-height: 1.5;
     }
 
-    .refer {
-      border: 1px solid #f3b8bf;
-      background: var(--red-soft);
-      color: #8f1f2b;
-      font-weight: 800;
+    .details-panel.limited {
+      background: linear-gradient(90deg, #fff8ed, #fffdf8);
     }
 
-    .empty {
-      padding: 18px;
-      border: 1px dashed #bfd0dd;
-      border-radius: 8px;
-      background: #fbfdff;
+    .details-panel.unavailable {
+      background: linear-gradient(90deg, #fff2f4, #fffafa);
+    }
+
+    .detail-row {
+      display: grid;
+      gap: 3px;
+    }
+
+    .detail-label {
       color: var(--muted);
-      text-align: center;
-      line-height: 1.8;
+      font-size: 12px;
+      font-weight: 900;
     }
 
-    .side-stack {
+    .detail-value {
+      color: var(--ink-2);
+      font-weight: 900;
+      line-height: 1.5;
+    }
+
+    .refer-line {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .refer-icon {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 11px;
+      background: #ffffff;
+      color: var(--red);
+      font-weight: 900;
+    }
+
+    .right-column {
       display: grid;
       gap: 18px;
     }
 
-    .updates-list {
+    .updates-toolbar {
       display: grid;
+      grid-template-columns: minmax(0, 1fr) 46px;
       gap: 10px;
-      max-height: 548px;
+      margin-bottom: 14px;
+    }
+
+    .mini-search {
+      width: 100%;
+      height: 46px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: var(--panel-soft);
+      padding: 0 14px;
+      outline: none;
+    }
+
+    .refresh-btn {
+      width: 46px;
+      height: 46px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: var(--panel-soft);
+      color: var(--blue);
+      font-weight: 900;
+    }
+
+    .updates-list {
+      position: relative;
+      display: grid;
+      gap: 0;
+      max-height: 626px;
       overflow-y: auto;
-      padding-left: 6px;
+      padding-left: 4px;
     }
 
     .update-item {
-      min-height: 64px;
-      padding: 12px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #fbfdff;
-    }
-
-    .update-text {
-      margin: 0 0 9px;
-      font-size: 13px;
-      line-height: 1.75;
-    }
-
-    .update-flow {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 7px;
-      align-items: center;
-      margin-bottom: 7px;
-    }
-
-    .arrow {
-      color: var(--muted);
-      font-weight: 800;
-    }
-
-    .tiny {
-      color: var(--muted);
-      font-size: 11px;
-      line-height: 1.6;
-    }
-
-    .expiry-tabs {
       display: grid;
-      gap: 12px;
+      grid-template-columns: minmax(0, 1fr) 108px;
+      gap: 14px;
+      min-height: 74px;
+      padding: 12px 0;
+      border-bottom: 1px solid #edf2f7;
     }
 
-    .expiry-group {
+    .update-item:last-child {
+      border-bottom: 0;
+    }
+
+    .update-main {
       display: grid;
       gap: 8px;
     }
 
-    .expiry-title {
+    .update-text {
       margin: 0;
-      font-size: 14px;
+      color: var(--ink-2);
+      font-size: 13px;
+      font-weight: 900;
+      line-height: 1.65;
+    }
+
+    .status-flow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      align-items: center;
+    }
+
+    .flow-arrow {
+      color: var(--blue-2);
+      font-size: 24px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .timeline-time {
+      position: relative;
+      padding-right: 16px;
+      border-right: 2px solid #d9e4f3;
+      color: var(--ink-2);
+      direction: ltr;
+      text-align: right;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .timeline-time:before {
+      content: "";
+      position: absolute;
+      top: 24px;
+      right: -5px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--blue);
+      box-shadow: 0 0 0 4px #edf5ff;
+    }
+
+    .timeline-time span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .expiry-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .expiry-panel {
+      display: grid;
+      gap: 10px;
+      min-height: 250px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--panel-soft);
+      padding: 14px;
+    }
+
+    .expiry-panel h3 {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.35;
+    }
+
+    .expiry-list {
+      display: grid;
+      align-content: start;
+      gap: 8px;
+      max-height: 330px;
+      overflow: auto;
+      padding-left: 4px;
     }
 
     .expiry-item {
       display: grid;
-      gap: 4px;
-      padding: 10px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #fbfdff;
+      grid-template-columns: 22px minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+      border-bottom: 1px solid #edf2f7;
+      padding: 7px 0;
+      color: var(--ink-2);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .expiry-mark {
+      display: grid;
+      place-items: center;
+      width: 18px;
+      height: 18px;
+      border: 1px solid currentColor;
+      border-radius: 50%;
+      color: var(--amber);
       font-size: 12px;
-      line-height: 1.6;
+      font-weight: 900;
+    }
+
+    .expiry-date {
+      color: var(--muted);
+      direction: ltr;
+      font-size: 12px;
+    }
+
+    .error-card {
+      display: grid;
+      gap: 14px;
+      padding: 18px;
+      border: 1px solid #d9e7fb;
+      border-radius: var(--radius);
+      background: linear-gradient(135deg, #f8fbff, #ffffff);
+    }
+
+    .open-form {
+      width: fit-content;
+      min-height: 44px;
+      border: 0;
+      border-radius: 13px;
+      background: var(--blue);
+      color: #ffffff;
+      padding: 0 16px;
+      font-weight: 900;
+      box-shadow: 0 14px 28px rgba(11, 99, 206, .22);
+    }
+
+    .empty {
+      display: grid;
+      place-items: center;
+      min-height: 96px;
+      border: 1px dashed #bfd0e5;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, .68);
+      color: var(--muted);
+      padding: 16px;
+      text-align: center;
+      line-height: 1.8;
+    }
+
+    .tiny {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
     }
 
     .watermark {
@@ -457,210 +826,358 @@
       right: 0;
       bottom: 10px;
       left: 0;
-      z-index: 10;
-      color: #607386;
+      z-index: 20;
+      color: #8a97aa;
       font-size: 12px;
       text-align: center;
       pointer-events: none;
     }
 
-    @media (max-width: 1120px) {
-      .toolbar,
-      .layout,
-      .topbar {
-        grid-template-columns: 1fr;
+    @media (min-width: 1600px) {
+      .main {
+        padding-left: 46px;
+        padding-right: 46px;
       }
 
-      .refresh-pill {
-        width: 100%;
+      .dashboard-grid {
+        grid-template-columns: minmax(720px, 1.2fr) minmax(540px, .8fr);
       }
     }
 
-    @media (max-width: 700px) {
-      .app {
-        width: min(100% - 24px, 1440px);
-        padding-top: 18px;
-      }
-
-      h1 {
-        font-size: 25px;
-      }
-
-      .stats {
+    @media (max-width: 1180px) {
+      .shell {
         grid-template-columns: 1fr;
       }
 
-      .grid {
+      .sidebar {
+        position: relative;
+        min-height: auto;
         grid-template-columns: 1fr;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .time-card {
+        display: none;
+      }
+
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .main {
+        padding: 18px 14px 72px;
+      }
+
+      .main-head,
+      .metric-row,
+      .expiry-grid,
+      .update-item {
+        grid-template-columns: 1fr;
+      }
+
+      .date-pill {
+        min-width: 0;
+      }
+
+      .medicine-list {
+        max-height: none;
+      }
+
+      .timeline-time {
+        border-right: 0;
+        padding-right: 0;
+        text-align: right;
+      }
+
+      .timeline-time:before {
+        display: none;
       }
     }
   </style>
 </head>
 <body>
-  <main class="app">
-    <header class="topbar">
-      <div>
-        <p class="eyebrow">Inventory OPD</p>
-        <h1>لوحة توفر أدوية العيادات الخارجية</h1>
-        <p class="subtitle">Outpatient pharmacy medication availability, read-only pharmacist view.</p>
-      </div>
-      <div class="refresh-pill">
-        <strong>آخر مزامنة</strong>
-        <span id="lastRefresh">جاري التحميل...</span>
-      </div>
-    </header>
+  <div class="shell">
+    <aside class="sidebar">
+      <section class="brand">
+        <div class="brand-mark">Rx</div>
+        <h1>مرجع الصيدلية الخارجية</h1>
+        <p>Outpatient Pharmacy Reference</p>
+      </section>
 
-    <section class="toolbar" aria-label="Search tools">
-      <div class="search-box">
-        <label class="search-label" for="searchInput">البحث من بداية اسم الدواء فقط</label>
-        <input id="searchInput" class="search-input" type="search" autocomplete="off" placeholder="اكتب بداية الاسم العربي أو الإنجليزي أو رقم الصنف">
-      </div>
+      <nav class="nav" aria-label="Dashboard navigation">
+        <button class="nav-button active" type="button" data-scroll-target="dashboard">
+          <span class="nav-icon">⌕</span>
+          <span>
+            <span class="nav-title">لوحة توفر الأدوية</span>
+            <span class="nav-sub">Medication Availability Dashboard</span>
+          </span>
+        </button>
+        <button class="nav-button" type="button" data-open-error-form="true">
+          <span class="nav-icon">□</span>
+          <span>
+            <span class="nav-title">نموذج الإبلاغ عن الأخطاء الدوائية</span>
+            <span class="nav-sub">Medication Error Form</span>
+          </span>
+        </button>
+      </nav>
 
-      <div class="letter-box">
-        <div class="mini-label">اختيار الحرف يفتح قائمة بالأدوية التي تبدأ به فقط</div>
-        <div id="englishLetters" class="letter-group" aria-label="English letters"></div>
-        <div id="arabicLetters" class="letter-group" aria-label="Arabic letters"></div>
-        <div id="letterResults" class="letter-results"></div>
-      </div>
-    </section>
+      <div></div>
 
-    <section class="layout">
-      <div class="section">
-        <div class="section-head">
-          <h2 class="section-title">حالة الأدوية الحالية</h2>
-          <span id="resultCount" class="count">0</span>
+      <section class="time-card">
+        <span id="clockTime" class="clock">--:--</span>
+        <p id="clockDate" class="muted">جاري تحميل الوقت...</p>
+      </section>
+    </aside>
+
+    <main class="main" id="dashboard">
+      <header class="main-head">
+        <div>
+          <p class="kicker">inventoryopd</p>
+          <h1 class="title">لوحة توفر الأدوية</h1>
+          <p class="subtitle">Medication Availability Dashboard</p>
+          <p class="subtitle">لوحة قراءة سريعة تساعد الصيادلة على التحقق من توفر الأدوية ومراجعة آخر تحديثات اليوم.</p>
         </div>
-        <div class="stats">
-          <div class="stat"><strong id="availableCount">0</strong><span>متوفر</span></div>
-          <div class="stat"><strong id="limitedCount">0</strong><span>كمية محدودة</span></div>
-          <div class="stat"><strong id="unavailableCount">0</strong><span>غير متوفر</span></div>
+        <div class="date-pill">
+          <span class="date-icon">▣</span>
+          <div>
+            <strong id="headerDate">جاري تحميل التاريخ...</strong>
+            <span id="headerDateEn">Loading date...</span>
+          </div>
         </div>
-        <div id="medicineGrid" class="grid"></div>
-      </div>
+      </header>
 
-      <aside class="side-stack">
-        <section class="section">
-          <div class="section-head">
-            <h2 class="section-title">تحديثات اليوم</h2>
-            <span class="count">Today’s Latest Updates</span>
+      <section class="dashboard-grid">
+        <div class="panel panel-pad">
+          <div class="panel-head">
+            <div>
+              <h2 class="section-title">البحث عن الدواء</h2>
+              <p class="section-subtitle">Search Medication</p>
+            </div>
+            <span id="resultCount" class="chip unknown">0</span>
           </div>
-          <div id="updatesList" class="updates-list"></div>
-        </section>
 
-        <section class="section">
-          <div class="section-head">
-            <h2 class="section-title">تواريخ انتهاء قريبة</h2>
-            <span class="count">Expiry</span>
+          <div class="metric-row">
+            <div class="metric"><strong id="availableCount">0</strong><span>متوفر / Available</span></div>
+            <div class="metric"><strong id="limitedCount">0</strong><span>كمية محدودة / Limited</span></div>
+            <div class="metric"><strong id="unavailableCount">0</strong><span>غير متوفر / Unavailable</span></div>
+            <div class="metric"><strong id="unknownCount">0</strong><span>غير محدد / Unknown</span></div>
           </div>
-          <div class="expiry-tabs">
-            <div class="expiry-group">
-              <h3 class="expiry-title">خلال 30 يوم</h3>
-              <div id="expiry30"></div>
+
+          <div class="search-card">
+            <div class="search-input-wrap">
+              <span class="search-symbol">⌕</span>
+              <input id="searchInput" class="search-input" type="search" autocomplete="off" placeholder="ابحث من بداية اسم الدواء / Search by first letters">
+              <button id="clearSearch" class="clear-search" type="button" aria-label="Clear search">×</button>
             </div>
-            <div class="expiry-group">
-              <h3 class="expiry-title">من 31 إلى 60 يوم</h3>
-              <div id="expiry60"></div>
+
+            <div class="letters">
+              <div id="englishLetters" class="letter-line" aria-label="English letters"></div>
+              <div id="arabicLetters" class="letter-line" aria-label="Arabic letters"></div>
+              <div id="letterDropdown" class="letter-dropdown"></div>
+            </div>
+
+            <div class="hint">
+              <span class="hint-mark">i</span>
+              <span>تظهر نتائج البحث حسب بداية الاسم فقط وبنفس لغة الإدخال. Search uses starts-with only.</span>
+            </div>
+
+            <div class="result-head">
+              <span class="result-count">نتائج البحث</span>
+              <span class="tiny">Search Results</span>
+            </div>
+
+            <div id="medicineList" class="medicine-list">
+              <div class="empty">جاري تحميل الأدوية...</div>
             </div>
           </div>
-        </section>
-      </aside>
-    </section>
-  </main>
+        </div>
+
+        <div class="right-column">
+          <section class="panel panel-pad">
+            <div class="panel-head">
+              <div>
+                <h2 class="section-title">آخر التحديثات</h2>
+                <p class="section-subtitle">Latest Updates</p>
+              </div>
+              <span class="chip unknown">اليوم</span>
+            </div>
+            <div class="updates-toolbar">
+              <input id="updatesFilter" class="mini-search" type="search" autocomplete="off" placeholder="ادخل اسم الصنف الدوائي للبحث عنه">
+              <button id="refreshUpdates" class="refresh-btn" type="button" title="Refresh">↻</button>
+            </div>
+            <div id="updatesList" class="updates-list">
+              <div class="empty">جاري تحميل تحديثات اليوم...</div>
+            </div>
+          </section>
+
+          <section class="expiry-grid">
+            <div class="expiry-panel">
+              <div>
+                <h3>الأدوية التي تنتهي خلال 30 يوم</h3>
+                <p class="section-subtitle">Medications Expiring in 30 Days</p>
+              </div>
+              <div id="expiry30" class="expiry-list"></div>
+            </div>
+
+            <div class="expiry-panel">
+              <div>
+                <h3>الأدوية التي تنتهي خلال 60 يوم</h3>
+                <p class="section-subtitle">Medications Expiring in 60 Days</p>
+              </div>
+              <div id="expiry60" class="expiry-list"></div>
+            </div>
+          </section>
+
+          <section class="error-card">
+            <div>
+              <h2 class="section-title">نموذج الإبلاغ عن الأخطاء الدوائية</h2>
+              <p class="section-subtitle">Medication Error Form</p>
+            </div>
+            <button id="openErrorForm" class="open-form" type="button">انتقل لصفحة تسجيل الأخطاء الدوائية الرسمي</button>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
 
   <div class="watermark">تم انتاج وتصميم العمل بالكامل بواسطة وعد نايف الوقداني Email: waadalwagdani@gmail.com</div>
 
   <script>
-    var medicines = [];
-    var filteredMedicines = [];
-    var selectedLetter = '';
-
+    var ERROR_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSfXtz14MBbLNfm7eO1_335EODUm2EEpy8I0Ctp91rjF5Swhjw/viewform';
     var STATUS_AVAILABLE = 'متوفر';
     var STATUS_LIMITED = 'كمية محدودة';
     var STATUS_UNAVAILABLE = 'غير متوفر';
+    var STATUS_UNKNOWN = 'غير محدد';
+    var medicines = [];
+    var currentResults = [];
+    var latestUpdates = [];
 
-    var englishLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-    var arabicLetters = 'ابتثجحخدذرزسشصضطظعغفقكلمنهوي'.split('');
+    var englishLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+    var arabicLetters = ['أ', 'ب', 'ت', 'ث', 'ج', 'ح', 'خ', 'د', 'ذ', 'ر', 'ز', 'س', 'ش', 'ص', 'ض', 'ط', 'ظ', 'ع', 'غ', 'ف', 'ق', 'ك', 'ل', 'م', 'ن', 'ه', 'و', 'ي'];
 
     document.addEventListener('DOMContentLoaded', function () {
       renderLetters();
-      bindEvents();
-      loadDashboard();
+      bindUi();
+      updateClock();
+      setInterval(updateClock, 30000);
+      loadMedicinesData();
+      loadUpdatesData();
+      loadExpiryData();
     });
 
-    function bindEvents() {
+    function bindUi() {
       document.getElementById('searchInput').addEventListener('input', function () {
-        selectedLetter = '';
         clearActiveLetters();
-        closeLetterResults();
-        renderMedicines(filterByQuery(this.value));
+        closeLetterDropdown();
+        renderMedicines(filterMedicinesByQuery(this.value));
+      });
+
+      document.getElementById('clearSearch').addEventListener('click', function () {
+        document.getElementById('searchInput').value = '';
+        clearActiveLetters();
+        closeLetterDropdown();
+        renderMedicines(medicines);
+      });
+
+      document.getElementById('updatesFilter').addEventListener('input', function () {
+        renderUpdates(filterUpdates(this.value));
+      });
+
+      document.getElementById('refreshUpdates').addEventListener('click', loadUpdatesData);
+      document.getElementById('openErrorForm').addEventListener('click', openErrorForm);
+
+      Array.prototype.forEach.call(document.querySelectorAll('[data-open-error-form]'), function (button) {
+        button.addEventListener('click', openErrorForm);
+      });
+      Array.prototype.forEach.call(document.querySelectorAll('[data-scroll-target]'), function (button) {
+        button.addEventListener('click', function () {
+          document.getElementById(this.getAttribute('data-scroll-target')).scrollIntoView({ behavior: 'smooth' });
+        });
       });
     }
 
-    function loadDashboard() {
-      setRefreshText('جاري تحميل بيانات الأدوية...');
-
+    function loadMedicinesData() {
       google.script.run
-        .withSuccessHandler(function (data) {
-          medicines = Array.isArray(data.medicines) ? data.medicines : [];
+        .withSuccessHandler(function (items) {
+          medicines = Array.isArray(items) ? items : [];
           renderStats(medicines);
           renderMedicines(medicines);
-          renderExpiry(data.expiring30 || [], data.expiring60 || []);
-          setRefreshText(new Date().toLocaleString('ar-SA'));
         })
-        .withFailureHandler(showLoadError)
-        .getDashboardBootstrap();
+        .withFailureHandler(function (error) {
+          document.getElementById('medicineList').innerHTML = errorBox(error);
+        })
+        .getMedicines();
+    }
 
+    function loadUpdatesData() {
       google.script.run
-        .withSuccessHandler(renderLatestUpdates)
+        .withSuccessHandler(function (items) {
+          latestUpdates = Array.isArray(items) ? items : [];
+          renderUpdates(filterUpdates(document.getElementById('updatesFilter').value));
+        })
         .withFailureHandler(function (error) {
           document.getElementById('updatesList').innerHTML = errorBox(error);
         })
         .getLatestUpdates(50);
     }
 
+    function loadExpiryData() {
+      google.script.run
+        .withSuccessHandler(function (buckets) {
+          renderExpiryBuckets(buckets || { within30: [], within60: [] });
+        })
+        .withFailureHandler(function (error) {
+          document.getElementById('expiry30').innerHTML = errorBox(error);
+          document.getElementById('expiry60').innerHTML = errorBox(error);
+        })
+        .getExpiringBuckets();
+    }
+
     function renderLetters() {
       document.getElementById('englishLetters').innerHTML = englishLetters.map(function (letter) {
-        return '<button class="letter-btn" type="button" data-kind="en" data-letter="' + letter + '">' + letter + '</button>';
+        return '<button class="letter-btn" type="button" data-kind="english" data-letter="' + letter + '">' + letter + '</button>';
       }).join('');
-
       document.getElementById('arabicLetters').innerHTML = arabicLetters.map(function (letter) {
-        return '<button class="letter-btn" type="button" data-kind="ar" data-letter="' + letter + '">' + letter + '</button>';
+        return '<button class="letter-btn" type="button" data-kind="arabic" data-letter="' + letter + '">' + letter + '</button>';
       }).join('');
 
       Array.prototype.forEach.call(document.querySelectorAll('.letter-btn'), function (button) {
         button.addEventListener('click', function () {
-          selectedLetter = this.getAttribute('data-letter');
+          var letter = this.getAttribute('data-letter');
+          var kind = this.getAttribute('data-kind');
           clearActiveLetters();
           this.classList.add('active');
           document.getElementById('searchInput').value = '';
-          openLetterResults(selectedLetter, this.getAttribute('data-kind'));
+          openLetterDropdown(letter, kind);
         });
       });
     }
 
-    function openLetterResults(letter, kind) {
+    function openLetterDropdown(letter, kind) {
       var results = medicines.filter(function (medicine) {
-        var source = kind === 'ar' ? medicine.nameAr : medicine.name;
+        var source = kind === 'arabic' ? medicine.nameAr : medicine.name;
         return normalizeText(source).startsWith(normalizeText(letter));
       });
-
+      var dropdown = document.getElementById('letterDropdown');
+      dropdown.classList.add('open');
       renderMedicines(results);
 
-      var panel = document.getElementById('letterResults');
-      panel.classList.add('open');
       if (!results.length) {
-        panel.innerHTML = '<div class="empty">لا توجد أدوية تبدأ بهذا الحرف.</div>';
+        dropdown.innerHTML = '<div class="empty">لا توجد أدوية تبدأ بهذا الحرف.</div>';
         return;
       }
 
-      panel.innerHTML = results.map(function (medicine) {
+      dropdown.innerHTML = results.map(function (medicine) {
         return '<button class="letter-item" type="button" data-id="' + escapeHtml(medicine.dbId) + '">' +
-          '<strong>' + escapeHtml(medicine.name || medicine.nameAr) + '</strong>' +
-          '<span class="tiny">' + escapeHtml(medicine.nameAr || medicine.itemNumber) + '</span>' +
-          '</button>';
+          '<strong>' + escapeHtml(medicine.name || medicine.nameAr || 'بدون اسم') + '</strong>' +
+          '<span class="tiny">' + escapeHtml(medicine.nameAr || medicine.dosageForm || '') + '</span>' +
+        '</button>';
       }).join('');
 
-      Array.prototype.forEach.call(panel.querySelectorAll('.letter-item'), function (button) {
+      Array.prototype.forEach.call(dropdown.querySelectorAll('.letter-item'), function (button) {
         button.addEventListener('click', function () {
           var dbId = this.getAttribute('data-id');
           var selected = medicines.filter(function (medicine) {
@@ -671,10 +1188,176 @@
       });
     }
 
-    function closeLetterResults() {
-      var panel = document.getElementById('letterResults');
-      panel.classList.remove('open');
-      panel.innerHTML = '';
+    function filterMedicinesByQuery(query) {
+      var term = normalizeText(query);
+      if (!term) return medicines;
+      var arabic = isArabicText(query);
+      return medicines.filter(function (medicine) {
+        var source = arabic ? medicine.nameAr : medicine.name;
+        return normalizeText(source).startsWith(term);
+      });
+    }
+
+    function renderStats(items) {
+      setText('availableCount', countStatus(items, STATUS_AVAILABLE));
+      setText('limitedCount', countStatus(items, STATUS_LIMITED));
+      setText('unavailableCount', countStatus(items, STATUS_UNAVAILABLE));
+      setText('unknownCount', countStatus(items, STATUS_UNKNOWN));
+    }
+
+    function countStatus(items, status) {
+      return items.filter(function (medicine) {
+        return (medicine.status || STATUS_UNKNOWN) === status;
+      }).length;
+    }
+
+    function renderMedicines(items) {
+      currentResults = Array.isArray(items) ? items : [];
+      setText('resultCount', currentResults.length + ' نتيجة');
+
+      if (!currentResults.length) {
+        document.getElementById('medicineList').innerHTML = '<div class="empty">لا توجد أدوية مطابقة لبداية النص المدخل.</div>';
+        return;
+      }
+
+      document.getElementById('medicineList').innerHTML = currentResults.map(renderMedicineCard).join('');
+    }
+
+    function renderMedicineCard(medicine) {
+      var status = medicine.status || STATUS_UNKNOWN;
+      var detail = '';
+      if (status === STATUS_LIMITED) {
+        detail = '<details class="details-panel limited" open><summary>تفاصيل التوفر / Availability details</summary>' +
+          '<div class="detail-row"><span class="detail-label">مكان التوفر</span><span class="detail-value">' + formatLimitedLocation(medicine.limitedLocation) + '</span></div>' +
+        '</details>';
+      }
+      if (status === STATUS_UNAVAILABLE) {
+        detail = '<details class="details-panel unavailable" open><summary>تفاصيل الإجراء / Action details</summary>' +
+          '<div class="refer-line"><span class="refer-icon">+</span><div><span class="detail-label">الإجراء التالي</span><div class="detail-value">الرجوع للطبيب<br>Refer to Physician</div></div></div>' +
+          '<div class="detail-row"><span class="detail-label">هل للصنف بديل مكافئ؟</span><span class="detail-value">' + formatAlternative(medicine.hasAlternative) + '</span></div>' +
+        '</details>';
+      }
+
+      return '<article class="medicine-card">' +
+        '<div class="medicine-top">' +
+          '<div>' +
+            '<h3 class="medicine-name">' + escapeHtml(medicine.name || medicine.nameAr || 'بدون اسم') + '</h3>' +
+            '<div class="tiny">' + escapeHtml(medicine.nameAr || medicine.dosageForm || '') + '</div>' +
+            '<div class="medicine-meta">' +
+              '<span>Item: ' + escapeHtml(medicine.itemNumber || '-') + '</span>' +
+              '<span>' + escapeHtml(medicine.dosageForm || medicine.dosageFormAr || '') + '</span>' +
+            '</div>' +
+          '</div>' +
+          statusChip(status) +
+        '</div>' +
+        detail +
+      '</article>';
+    }
+
+    function filterUpdates(query) {
+      var term = normalizeText(query);
+      if (!term) return latestUpdates;
+      var arabic = isArabicText(query);
+      return latestUpdates.filter(function (update) {
+        var source = arabic ? update.nameAr : update.name;
+        return normalizeText(source).startsWith(term);
+      });
+    }
+
+    function renderUpdates(items) {
+      var updates = Array.isArray(items) ? items : [];
+      var list = document.getElementById('updatesList');
+      if (!updates.length) {
+        list.innerHTML = '<div class="empty">لا توجد تحديثات لحالة الأدوية خلال اليوم الحالي.</div>';
+        return;
+      }
+
+      list.innerHTML = updates.map(function (update) {
+        var name = update.name || update.nameAr || update.itemNumber || 'الدواء';
+        var timeParts = splitTimestamp(update.timestamp);
+        return '<article class="update-item">' +
+          '<div class="update-main">' +
+            '<p class="update-text">تم تحديث حالة <strong>' + escapeHtml(name) + '</strong> من <strong>' + escapeHtml(update.oldStatus || '-') + '</strong> إلى <strong>' + escapeHtml(update.newStatus || '-') + '</strong></p>' +
+            '<div class="status-flow">' + statusChip(update.oldStatus) + '<span class="flow-arrow">→</span>' + statusChip(update.newStatus) + '</div>' +
+            '<div class="tiny">' + (update.user ? 'تم التحديث بواسطة: ' + escapeHtml(update.user) : '') + '</div>' +
+          '</div>' +
+          '<time class="timeline-time">' + escapeHtml(timeParts.time) + '<span>' + escapeHtml(timeParts.date) + '</span></time>' +
+        '</article>';
+      }).join('');
+    }
+
+    function renderExpiryBuckets(buckets) {
+      renderExpiryList('expiry30', buckets.within30 || [], 'لا توجد أدوية تنتهي خلال 30 يوم.');
+      renderExpiryList('expiry60', buckets.within60 || [], 'لا توجد أدوية تنتهي خلال 60 يوم.');
+    }
+
+    function renderExpiryList(id, items, emptyText) {
+      var list = document.getElementById(id);
+      if (!items.length) {
+        list.innerHTML = '<div class="empty">' + escapeHtml(emptyText) + '</div>';
+        return;
+      }
+      list.innerHTML = items.map(function (item) {
+        return '<div class="expiry-item">' +
+          '<span class="expiry-mark">!</span>' +
+          '<span>' + escapeHtml(item.name || item.nameAr || item.itemNumber || '-') + '</span>' +
+          '<span class="expiry-date">' + escapeHtml(item.sortDate || '-') + '</span>' +
+        '</div>';
+      }).join('');
+    }
+
+    function statusChip(status) {
+      var value = status || STATUS_UNKNOWN;
+      return '<span class="chip ' + statusClass(value) + '">' + escapeHtml(statusLabel(value)) + '</span>';
+    }
+
+    function statusClass(status) {
+      if (status === STATUS_AVAILABLE) return 'available';
+      if (status === STATUS_LIMITED) return 'limited';
+      if (status === STATUS_UNAVAILABLE) return 'unavailable';
+      return 'unknown';
+    }
+
+    function statusLabel(status) {
+      if (status === STATUS_AVAILABLE) return 'متوفر / Available';
+      if (status === STATUS_LIMITED) return 'كمية محدودة / Limited Stock';
+      if (status === STATUS_UNAVAILABLE) return 'غير متوفر / Unavailable';
+      return 'غير محدد / Unknown';
+    }
+
+    function formatLimitedLocation(value) {
+      if (value === 'في الصيدلية') return 'في الصيدلية / In Pharmacy';
+      if (value === 'مكتب المشرف') return 'مكتب المشرف / Supervisor Office';
+      return 'غير محدد / Not specified';
+    }
+
+    function formatAlternative(value) {
+      if (value === 'نعم') return 'نعم / Equivalent alternative: Yes';
+      if (value === 'لا') return 'لا / Equivalent alternative: No';
+      return 'غير محدد / Equivalent alternative: Not specified';
+    }
+
+    function splitTimestamp(timestamp) {
+      var text = String(timestamp || '');
+      return {
+        date: text.slice(0, 10) || '',
+        time: text.slice(11, 16) || text || ''
+      };
+    }
+
+    function updateClock() {
+      var now = new Date();
+      var arDate = now.toLocaleDateString('ar-SA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      var enDate = now.toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      var time = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      setText('clockTime', time);
+      setText('clockDate', arDate);
+      setText('headerDate', arDate);
+      setText('headerDateEn', enDate);
+    }
+
+    function openErrorForm() {
+      window.open(ERROR_FORM_URL, '_blank', 'noopener');
     }
 
     function clearActiveLetters() {
@@ -683,123 +1366,10 @@
       });
     }
 
-    function filterByQuery(query) {
-      var term = normalizeText(query);
-      if (!term) return medicines;
-
-      return medicines.filter(function (medicine) {
-        return normalizeText(medicine.name).startsWith(term) ||
-          normalizeText(medicine.nameAr).startsWith(term) ||
-          normalizeText(medicine.itemNumber).startsWith(term);
-      });
-    }
-
-    function renderStats(items) {
-      document.getElementById('availableCount').textContent = items.filter(function (medicine) {
-        return medicine.status === STATUS_AVAILABLE;
-      }).length;
-      document.getElementById('limitedCount').textContent = items.filter(function (medicine) {
-        return medicine.status === STATUS_LIMITED;
-      }).length;
-      document.getElementById('unavailableCount').textContent = items.filter(function (medicine) {
-        return medicine.status === STATUS_UNAVAILABLE;
-      }).length;
-    }
-
-    function renderMedicines(items) {
-      filteredMedicines = Array.isArray(items) ? items : [];
-      document.getElementById('resultCount').textContent = filteredMedicines.length;
-
-      if (!filteredMedicines.length) {
-        document.getElementById('medicineGrid').innerHTML = '<div class="empty">لا توجد أدوية مطابقة لبداية النص المدخل.</div>';
-        return;
-      }
-
-      document.getElementById('medicineGrid').innerHTML = filteredMedicines.map(renderMedicineCard).join('');
-    }
-
-    function renderMedicineCard(medicine) {
-      var statusClass = statusClassName(medicine.status);
-      var details = '';
-
-      if (medicine.status === STATUS_LIMITED) {
-        details = '<div class="detail-box"><strong>مكان توفر الكمية المحدودة</strong><span>' + escapeHtml(medicine.limitedLocation || 'غير محدد') + '</span></div>';
-      }
-
-      if (medicine.status === STATUS_UNAVAILABLE) {
-        details = '<div class="detail-box refer">الرجوع للطبيب / Refer to Physician</div>' +
-          '<div class="detail-box"><strong>هل للصنف بديل مكافئ؟</strong><span>' + escapeHtml(medicine.equivalentAlternative || 'غير محدد') + '</span></div>';
-      }
-
-      var note = medicine.supplyNote ? '<div class="detail-box"><strong>ملاحظة التموين</strong><span>' + escapeHtml(medicine.supplyNote) + '</span></div>' : '';
-
-      return '<article class="card">' +
-        '<div class="card-top">' +
-          '<div>' +
-            '<h3 class="med-name">' + escapeHtml(medicine.name || medicine.nameAr || 'بدون اسم') + '</h3>' +
-            '<p class="med-ar">' + escapeHtml(medicine.nameAr || '') + '</p>' +
-          '</div>' +
-          '<span class="chip ' + statusClass + '">' + escapeHtml(medicine.status || STATUS_AVAILABLE) + '</span>' +
-        '</div>' +
-        '<div class="meta">' +
-          '<span>Item: ' + escapeHtml(medicine.itemNumber || '-') + '</span>' +
-          '<span>' + escapeHtml(medicine.dosageForm || medicine.dosageFormAr || '') + '</span>' +
-        '</div>' +
-        details +
-        note +
-        '<div class="tiny">آخر تحديث: ' + escapeHtml(medicine.updatedAt || '-') + ' · ' + escapeHtml(medicine.updatedBy || '-') + '</div>' +
-      '</article>';
-    }
-
-    function renderLatestUpdates(updates) {
-      var list = document.getElementById('updatesList');
-      var todayUpdates = Array.isArray(updates) ? updates : [];
-
-      if (!todayUpdates.length) {
-        list.innerHTML = '<div class="empty">لا توجد تحديثات لحالة الأدوية خلال اليوم الحالي.</div>';
-        return;
-      }
-
-      list.innerHTML = todayUpdates.map(function (update) {
-        var medName = update.name || update.nameAr || update.itemNumber || 'الدواء';
-        return '<article class="update-item">' +
-          '<p class="update-text">تم تحديث حالة <strong>' + escapeHtml(medName) + '</strong> من <strong>' + escapeHtml(update.oldStatus || '-') + '</strong> إلى <strong>' + escapeHtml(update.newStatus || '-') + '</strong></p>' +
-          '<div class="update-flow">' +
-            '<span class="chip ' + statusClassName(update.oldStatus) + '">' + escapeHtml(update.oldStatus || '-') + '</span>' +
-            '<span class="arrow">→</span>' +
-            '<span class="chip ' + statusClassName(update.newStatus) + '">' + escapeHtml(update.newStatus || '-') + '</span>' +
-          '</div>' +
-          '<div class="tiny">' + escapeHtml(update.timestamp || '') + (update.user ? ' · ' + escapeHtml(update.user) : '') + '</div>' +
-        '</article>';
-      }).join('');
-    }
-
-    function renderExpiry(expiring30, expiring60) {
-      var within30 = Array.isArray(expiring30) ? expiring30 : [];
-      var within60 = (Array.isArray(expiring60) ? expiring60 : []).filter(function (item) {
-        return Number(item.daysUntil) > 30;
-      });
-
-      document.getElementById('expiry30').innerHTML = renderExpiryList(within30, 'لا توجد تواريخ انتهاء خلال 30 يوم.');
-      document.getElementById('expiry60').innerHTML = renderExpiryList(within60, 'لا توجد تواريخ انتهاء من 31 إلى 60 يوم.');
-    }
-
-    function renderExpiryList(items, emptyText) {
-      if (!items.length) return '<div class="empty">' + escapeHtml(emptyText) + '</div>';
-      return items.map(function (item) {
-        return '<div class="expiry-item">' +
-          '<strong>' + escapeHtml(item.name || item.nameAr || item.itemNumber) + '</strong>' +
-          '<span>' + escapeHtml(item.nameAr || '') + '</span>' +
-          '<span>Item: ' + escapeHtml(item.itemNumber || '-') + '</span>' +
-          '<span>تاريخ الانتهاء: ' + escapeHtml(item.sortDate || '-') + ' · متبقي ' + escapeHtml(String(item.daysUntil)) + ' يوم</span>' +
-        '</div>';
-      }).join('');
-    }
-
-    function statusClassName(status) {
-      if (status === STATUS_LIMITED) return 'limited';
-      if (status === STATUS_UNAVAILABLE) return 'unavailable';
-      return 'available';
+    function closeLetterDropdown() {
+      var dropdown = document.getElementById('letterDropdown');
+      dropdown.classList.remove('open');
+      dropdown.innerHTML = '';
     }
 
     function normalizeText(value) {
@@ -812,17 +1382,18 @@
         .replace(/[ًٌٍَُِّْـ]/g, '');
     }
 
-    function setRefreshText(text) {
-      document.getElementById('lastRefresh').textContent = text;
-    }
-
-    function showLoadError(error) {
-      setRefreshText('تعذر تحميل البيانات');
-      document.getElementById('medicineGrid').innerHTML = errorBox(error);
+    function isArabicText(value) {
+      return /[\u0600-\u06FF]/.test(String(value || ''));
     }
 
     function errorBox(error) {
-      return '<div class="empty">حدث خطأ أثناء تحميل البيانات: ' + escapeHtml(error && error.message ? error.message : error) + '</div>';
+      var message = error && error.message ? error.message : error;
+      return '<div class="empty">حدث خطأ أثناء تحميل البيانات: ' + escapeHtml(message || '') + '</div>';
+    }
+
+    function setText(id, value) {
+      var element = document.getElementById(id);
+      if (element) element.textContent = value;
     }
 
     function escapeHtml(value) {

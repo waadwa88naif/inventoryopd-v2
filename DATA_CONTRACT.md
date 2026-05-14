@@ -2,95 +2,85 @@
 
 This project is a Google Apps Script web app for outpatient pharmacy medication availability.
 
-## Source of truth
+## Source Of Truth
 
-Master_DB = current medication state  
-Update_Log = historical availability update log  
-Expiry_Dates = expiry dates  
-Settings = users and dropdown values  
+- `Master_DB`: current medication state only.
+- `Update_Log`: historical event log for availability changes.
+- `Expiry_Dates`: medication expiry dates.
+- `Settings`: users and dropdown values.
 
-## Required Google Sheets tabs
+Today’s Latest Updates must read from `Update_Log` through `getLatestUpdates(50)`. Do not build latest updates from `Master_DB`.
 
-### Master_DB
+## getMedicines()
 
-Headers:
+Returns current medication state from `Master_DB`.
 
-DB_ID  
-Item number  
-Name  
-الإسم  
-Dosage form  
-الشكل الدوائي  
-حالة التوفر  
-مكان توفر الكمية المحدودة  
-هل للصنف بديل مكافئ؟  
-ملاحظة التموين  
-آخر تحديث  
-تم التحديث بواسطة  
-تواريخ الانتهاء الحالية  
-عدد تواريخ الانتهاء  
-أقرب تاريخ انتهاء للفرز  
-تنبيه الانتهاء الحالي  
-Search_Key  
+```json
+[
+  {
+    "dbId": "DB-001",
+    "itemNumber": "12345",
+    "name": "Ticagrelor 90mg Tablet",
+    "nameAr": "...",
+    "dosageForm": "Tablet",
+    "dosageFormAr": "...",
+    "status": "متوفر",
+    "limitedLocation": "",
+    "hasAlternative": "غير محدد",
+    "note": "",
+    "updatedAt": "2026-05-14 09:30:00",
+    "updatedBy": "عبدالرحمن الثبيتي",
+    "expiryDates": "2026-06-30, 2026-07-31",
+    "expiryCount": 2,
+    "nearestExpiry": "2026-06-30",
+    "expiryAlert": "قريب الانتهاء",
+    "searchKey": "ticagrelor 90mg tablet | ..."
+  }
+]
+```
 
-### Update_Log
+## updateAvailability(payload)
 
-Headers:
+Payload sent by `SupplyPanel.html`:
 
-Log_ID  
-التاريخ والوقت  
-نوع التحديث  
-DB_ID  
-Item number  
-Name  
-الإسم  
-الحالة السابقة  
-الحالة الجديدة  
-مكان التوفر السابق  
-مكان التوفر الجديد  
-البديل السابق  
-البديل الجديد  
-ملاحظة  
-تم التحديث بواسطة  
-مصدر التحديث  
+```json
+{
+  "dbId": "DB-001",
+  "status": "كمية محدودة",
+  "limitedLocation": "في الصيدلية",
+  "hasAlternative": "غير محدد",
+  "note": "Optional note",
+  "user": "عبدالرحمن الثبيتي"
+}
+```
 
-### Expiry_Dates
+Behavior:
 
-Headers:
+- Finds medication by `DB_ID`.
+- Reads old status, old limited location, old equivalent alternative answer, and old note before writing.
+- Updates `Master_DB`.
+- Appends exactly one row to `Update_Log`.
+- Sets `نوع التحديث` to `Availability Update`.
+- Sets `مصدر التحديث` to `Supply Mobile Panel`.
+- Sets `الحقل` to `حالة التوفر` when that optional appended column exists.
 
-Expiry_ID  
-DB_ID  
-Item number  
-Name  
-الإسم  
-شهر الانتهاء  
-سنة الانتهاء  
-تاريخ الانتهاء للفرز  
-حالة التاريخ  
-ملاحظة  
-آخر تحديث  
-تم التحديث بواسطة  
-Is_Active  
+## getLatestUpdates(limit)
 
-### Settings
+Reads `Update_Log` only.
 
-Headers:
+Filters:
 
-المستخدمين  
-حالات التوفر  
-مكان توفر الكمية المحدودة  
-هل للصنف بديل مكافئ؟  
-الأشهر  
-السنوات  
+- `نوع التحديث` exactly equals `Availability Update`.
+- row date is the current day in `Asia/Riyadh`.
+- expiry additions/deletions are excluded.
 
-## Apps Script data contracts
+Sort:
 
-### getLatestUpdates(limit)
+- newest first.
 
-Must return only availability updates from today's date using Asia/Riyadh timezone.
+Exact returned shape:
 
-Return shape:
-
+```json
 [
   {
     "timestamp": "yyyy-MM-dd HH:mm:ss",
@@ -102,39 +92,81 @@ Return shape:
     "user": "عبدالرحمن الثبيتي"
   }
 ]
+```
 
-### getMedicines()
+No other key names should be required by `PharmacistDashboard.html`.
 
-Must return current medication state from Master_DB.
+## getExpiringBuckets()
 
-### updateAvailability(payload)
+Reads active rows from `Expiry_Dates` where `Is_Active` is not `محذوف`.
 
-Must:
-1. Read old status from Master_DB before changing it.
-2. Update Master_DB.
-3. Append one row to Update_Log.
-4. Preserve oldStatus and newStatus clearly.
+Returns:
 
-## Search rule
+```json
+{
+  "within30": [
+    {
+      "expiryId": "EXP-001",
+      "dbId": "DB-001",
+      "itemNumber": "12345",
+      "name": "Ticagrelor 90mg Tablet",
+      "nameAr": "...",
+      "month": 6,
+      "year": 2026,
+      "sortDate": "2026-06-30",
+      "dateStatus": "قريب الانتهاء",
+      "note": "",
+      "updatedAt": "2026-05-14 09:30:00",
+      "updatedBy": "عبدالرحمن الثبيتي",
+      "isActive": "نشط",
+      "daysUntil": 28
+    }
+  ],
+  "within60": [
+    {
+      "expiryId": "EXP-002",
+      "dbId": "DB-002",
+      "itemNumber": "67890",
+      "name": "Metformin 500mg Tablet",
+      "nameAr": "...",
+      "month": 7,
+      "year": 2026,
+      "sortDate": "2026-07-31",
+      "dateStatus": "تحذير خلال 60 يوم",
+      "note": "",
+      "updatedAt": "2026-05-14 09:30:00",
+      "updatedBy": "نواف سندي",
+      "isActive": "نشط",
+      "daysUntil": 59
+    }
+  ]
+}
+```
 
-Medication search must use startsWith only.  
-Do not use contains for medication search.
+`within60` contains active dates from day 31 through day 60 so the 30-day and 60-day cards do not duplicate items.
 
-## Pharmacist dashboard rules
+## getExpiryDates(dbId)
 
-- Read-only.
-- Shows current medication availability.
-- Shows today’s latest availability updates from Update_Log only.
-- Does not show SupplyPanel link.
-- Does not show alternative medication names.
-- For unavailable medication, show:
-  الرجوع للطبيب / Refer to Physician
-  and whether equivalent alternative exists: نعم / لا / غير محدد.
+Returns active expiry dates for one medication, sorted by date.
 
-## Supply panel rules
+```json
+[
+  {
+    "expiryId": "EXP-001",
+    "dbId": "DB-001",
+    "itemNumber": "12345",
+    "name": "Ticagrelor 90mg Tablet",
+    "nameAr": "...",
+    "month": 6,
+    "year": 2026,
+    "sortDate": "2026-06-30",
+    "dateStatus": "قريب الانتهاء",
+    "note": "",
+    "updatedAt": "2026-05-14 09:30:00",
+    "updatedBy": "عبدالرحمن الثبيتي",
+    "isActive": "نشط"
+  }
+]
+```
 
-- Arabic primary, English secondary.
-- Requires:
-  ?page=supply&key=waad-supply-2026
-- On availability save, update Master_DB and append Update_Log.
-- On expiry delete, set Is_Active to محذوف.
+Deleting an expiry date sets `Is_Active` to `محذوف`; rows are not physically deleted.
